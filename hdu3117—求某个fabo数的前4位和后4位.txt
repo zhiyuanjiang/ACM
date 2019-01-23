@@ -1,0 +1,75 @@
+#include <iostream>
+#include <algorithm>
+#include <cstring>
+#include <string>
+#include <cmath>
+
+using namespace std;
+
+const int mod = 10000;
+
+struct Matrax{
+    //int r,c;
+    int a[2][2];
+    Matrax(){
+        memset(a,0,sizeof(a));
+    }
+};
+
+Matrax Mult_Matrax(Matrax x,Matrax s)
+{
+    Matrax ans;
+    for( int i = 0 ; i < 2 ; ++i ){
+        for( int j = 0 ; j < 2 ; ++j ){
+            for( int k = 0 ; k < 2 ; ++k ){
+                ans.a[i][j] = (ans.a[i][j]+x.a[i][k]*s.a[k][j]%mod)%mod;
+            }
+        }
+    }
+    return ans;
+}
+
+Matrax Fast_Matrax(Matrax x,int n)
+{
+    Matrax ans;
+    for( int i = 0 ; i < 2 ; ++i ) ans.a[i][i] = 1;
+    while(n){
+        if(n&1) ans = Mult_Matrax(ans,x);
+        x = Mult_Matrax(x,x);
+        n >>= 1;
+    }
+    return ans;
+}
+
+int main()
+{
+    int fabo[50];
+    fabo[1] = fabo[2] = 1;
+    fabo[0] = 0;
+    for( int i = 3 ; i < 40 ; ++i ){
+        fabo[i] = fabo[i-1]+fabo[i-2];
+        //cout << fabo[i] << endl;
+    }
+
+    int n;
+    while(~scanf("%d",&n)){
+        if(n <= 39){printf("%d\n",fabo[n]);continue;}
+
+        int L4,F4;
+
+        Matrax s;
+        s.a[0][0] = s.a[0][1] = s.a[1][0] = 1;
+        s = Fast_Matrax(s,n-1);
+        L4 = s.a[0][0];
+
+        double s1 = 1.0/sqrt(5.0);
+        double s2 = (1.0+sqrt(5.0))/2.0;
+        double as = log10(s1)+n*log10(s2);
+        as = as-floor(as);
+        as = pow(10,as);
+        F4 = floor(as*10000)/10;
+
+        printf("%d...%04d\n",F4,L4);  //后面4位不足要补0
+    }
+    return 0;
+}

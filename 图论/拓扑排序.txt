@@ -1,0 +1,61 @@
+#include <iostream>
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+#include <string>
+#include <queue>
+
+using namespace std;
+
+const int N = 100;
+
+struct Edge{
+    int node;
+    Edge*next;
+}edge[N];
+Edge*head[N];
+int Ecnt,indeg[N];  //indeg为结点入度
+
+void init()
+{
+    Ecnt = 0;
+    fill(head,head+N,(Edge*)0);
+    memset(indeg,0,sizeof(indeg));
+}
+
+void mkEdge(int a,int b)
+{
+    indeg[b]++;
+    edge[Ecnt].node = b;
+    edge[Ecnt].next = head[a];
+    head[a] = edge+Ecnt++;
+}
+
+void topoSort(int n)
+{
+    queue<int>q;
+    for(int i = 0; i < n; ++i){
+        if(indeg[i] == 0) q.push(i);  //入度为0的点入队
+    }
+    int cnt = 0;
+    
+    while(!q.empty()){
+        int u = q.front();
+        q.pop();
+        cnt++;
+        for(Edge*p = head[u]; p; p = p->next){
+            int v = p->node;
+            //删去与0入度结点及其相连的边
+            --indeg[v];
+            if(indeg[v] == 0) q.push(v);
+        }
+    }
+    
+    if(cnt == n) cout << "能进行拓扑排序" << endl;
+}
+
+int main()
+{
+    
+    return 0;
+}

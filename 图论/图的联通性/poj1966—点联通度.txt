@@ -1,0 +1,169 @@
+#include <iostream>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
+#include <algorithm>
+#include <string>
+#include <stack>
+#include <queue>
+#include <set>
+#include <vector>
+
+using namespace std;
+
+typedef long long ll;
+typedef pair<int,int> PA;
+const int N = 20900;
+const int M = 109;
+const int INF = 0x3fffffff;
+const double eps = 1e-8;
+const double PI = acos(-1.0);
+
+//点的联通度求解
+/*
+    Merger定理：当G是完全图   k(G) = |V(G)|-1
+                当G不是完全图 k(G) = min(p(A,B)) 其中点A,b不相邻
+                
+    p(A,B):点A到B独立轨的最大条数
+    
+    独立轨的求解:
+    1.构造一个容量网络，原图G中的每个顶点u变成两个点u,u'，u和u'间连条变，容量为1
+    若u,v连个点相连，则u'到v建边，v'到u建边，容量都为无穷
+    2.A'为源点，B为汇点，求从A'到B的最大流
+    
+    求点的联通度:
+    枚举所有的源点和汇点，求p(s,t)的最下值
+*/
+
+struct Edge{
+    int node,c;
+    Edge*next;
+    Edge*redge;
+}m_edge[N*2];
+Edge*head[M];
+int Ecnt;
+
+void init()
+{
+    Ecnt = 0;
+    fill( head , head+M , (Edge*)0 );
+}
+
+void mkEdge( int a , int b , int c )
+{
+    int t1 = Ecnt++;
+    int t2 = Ecnt++;
+
+    m_edge[t1].node = b;
+    m_edge[t1].c = c;
+    m_edge[t1].next = head[a];
+    m_edge[t1].redge = m_edge+t2;
+    head[a] = m_edge+t1;
+
+    m_edge[t2].node = a;
+    m_edge[t2].c = 0;
+    m_edge[t2].next = head[b];
+    m_edge[t2].redge = m_edge+t1;
+    head[b] = m_edge+t2;
+}
+
+int L[M]; //层次图
+
+bool bfs( int s , int t )
+{
+    fill( L , L+M , -1 );
+    queue<int>q;
+    q.push(s);
+    L[s] = 0;
+
+    while( !q.empty() ){
+        int u = q.front();
+        q.pop();
+
+        //寻找还有残量的边
+        for( Edge*p = head[u] ; p ; p = p->next ){
+            if( p->c <= 0 ) continue;
+
+            int v = p->node;
+            if( -1 != L[v] ) continue;
+
+            q.push(v);
+            L[v] = L[u]+1;
+        }
+    }
+
+    return -1 != L[t];
+}
+
+int dfs( int u , int e , int cf )
+{
+    if( u == e ) return cf;
+
+    int tf = 0;
+    for( Edge*p = head[u] ; p ; p = p->next ){
+        int v = p->node;
+        int c = p->c;
+
+        if( L[u]+1 == L[v] && c > 0 && cf > tf ){
+            int f = dfs( v , e , min(c,cf-tf) );
+            if( 0 == f ) continue;
+
+            p->c -= f;
+            p->redge->c += f;
+            tf += f;
+        }
+    }
+    if( 0 == tf ) L[u] = -1;
+    return tf;
+}
+
+int Dinic( int s , int t )
+{
+    int ret = 0;
+    while( bfs(s,t) ){
+        int ans;
+        while( ans = dfs(s,t,INT_MAX ) ){
+            ret += ans;
+        }
+    }
+    return ret;
+}
+
+vector<PA>mp;
+
+void Build( int n , int m )
+{
+    init();
+    for( int i = 0 ; i < n ; ++i ){
+        mkEdge(i,i+n,1);
+    }
+    for( int i = 0 ; i < m ; ++i ){
+        PA s = mp[i];
+        mkEdge(s.first+n,s.second,INF);
+        mkEdge(s.second+n,s.first,INF);
+    }
+}
+
+int main()
+{
+    int n,m;
+    while( ~scanf("%d%d",&n,&m) ){
+        while( !mp.empty() ) mp.pop_back();
+        int a,b;
+        for( int i = 0 ; i < m ; ++i ){
+            scanf(" (%d,%d)",&a,&b);
+            mp.push_back(PA(a,b));
+        }
+        int ans = INF;
+        //枚举源点和汇点
+        for( int i = 0 ; i < n ; ++i ){
+            for( int j = i+1 ; j < n ; ++j ){
+                Build(n,m);
+                ans = min(ans,Dinic(i+n,j));
+            }
+        }
+        if( ans == INF ) ans = n;
+        printf("%d\n",ans);
+    }
+    return 0;
+}

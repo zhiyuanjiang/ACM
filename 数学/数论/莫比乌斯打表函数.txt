@@ -1,0 +1,31 @@
+int isNotPrime[N],prime[N],num_prime;
+int mu[N];  //莫比乌斯函数
+
+/*
+	mu[1] = 1
+	n = p1*p2....*pk,如果pi是各不相同的质数,mu[n] = (-1)^k
+	其余m[i] = 0
+*/
+
+void init()
+{
+	memset(isNotPrime,0,sizeof(isNotPrime));
+	num_prime = 0;
+	mu[1] = 1;
+
+	for( int i = 2 ; i < N ; ++i ){
+		if(!isNotPrime[i]){
+			prime[num_prime++] = i;
+			mu[i] = -1;
+		}
+		for( int j = 0 ; j < num_prime&&i*prime[j] < N ; ++j ){
+			isNotPrime[i*prime[j]] = 1;
+			if(i%prime[j] == 0){
+				mu[i*prime[j]] = 0;
+				break;
+			}else{
+				mu[i*prime[j]] = -mu[i];
+			}
+		}
+	}
+}

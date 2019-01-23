@@ -1,0 +1,36 @@
+set是用红黑树实现的关联式容器，不会出现重复的元素，且会对内部的元素自动排序
+查找，删除，插入的复杂度都是log(n)
+iterator一定不能使用过时的
+
+begin()     //返回set容器的第一个元素
+
+end()       //返回set容器的最后一个元素
+
+clear()     //删除set容器中的所有元素
+
+empty()     //判断set容器是否为空
+
+size()      //返回当前set容器中元素个数
+
+count()     //查找set中某个值出现次数，因为不是1 or 0，所有用来判断某元素是否出现在set中
+
+erase(iterator) //删除定位器iterator指向的值
+erase(first,second) //删除定位器first和second之间的值
+erase(key_value) //删除键值key_value的值
+
+find()          //返回给定值的定位器，没有找到返回end()
+
+insert(key_value)  //将key_value插入到set中，返回值是pair<set<int>::iterator,bool>,bool标志着插入是否成功，而iterator代表插入值的位置，若key_value已经在set中，则iterator表示key_value在set中的位置
+insert(first,second)  //将定位器first到second之间的元素插入到set中，返回值是void
+
+lower_bound(key_value)  //返回第一个大于等于key_value的定位器
+
+upper_bound(key_value)  //返回第一个大于key_value的定位器
+
+元素的遍历,使用迭代器
+set<int>::iterator iter;
+for(iter = st.begin(); iter != st.end(); ++iter);
+
+自定义比较函数
+set中传入结构体，可以在结构体中定义比较函数
+ 

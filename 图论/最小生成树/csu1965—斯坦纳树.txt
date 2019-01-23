@@ -1,0 +1,113 @@
+#include <iostream>  
+#include <cstdio>  
+#include <cstring>  
+#include <cmath>  
+#include <algorithm>  
+#include <string>  
+#include <stack>  
+#include <queue>  
+#include <set>  
+#include <map>  
+  
+using namespace std;  
+  
+#define move(a)(1<<(a))  
+  
+typedef long long ll;  
+typedef pair<int,int>PA;  
+const int N = 100900;  
+const int M = 60;  
+const int INF = 0x3fffffff;  
+const double eps = 1e-8;  
+const double PI = acos(-1.0);  
+const int mod = 1001113;  
+  
+int dp[1<<15][M],dis[M][M];  
+int st[12];   //存储boss想要哪些员工知道的编号  
+  
+//斯坦纳树:在平面中给你n个点，问你其中m个点到点p的最小生成树，一般n<=10  
+  
+//dp[M个必须知道消息的人组成的状态][到老板或某个员工]:最小花费  
+//将老板看做0点，最后的答案就是dp[(1<<m)-1][0]  
+//dp[i][j]的松弛:  
+//dp[i][j] = min{dp[i][j],dp[k][i]+dp[l][i]},其中k和l是对j的一个划分  
+//dp[i][j] = min{dp[i][j],dp[i][j']+dist[j'][j]},j与j'有边相连  
+  
+void cal( int n , int m )  
+{  
+    //初始化  
+    for( int sta = 0 ; sta < move(n) ; ++sta ){  
+        for( int i = 0 ; i <= n+m ; ++i )  
+            dp[sta][i] = INF;  
+    }  
+    for( int i = 0 ; i < n ; ++i ){  
+        for( int j = 0 ; j <= n+m ; ++j )  
+            //n个人中的第i个人到第j号人的花费就是st[i]到j间的最小花费  
+            dp[move(i)][j] = dis[st[i]][j];  
+    }  
+  
+    //状态松弛  
+    for( int sta = 1 ; sta < move(n) ; ++sta ){  
+        //是否有子集  
+        if( sta&(sta-1) ){  
+            for( int i = 0 ; i <= n+m ; ++i ){  
+                for( int j = sta ; j > 0 ; j = (j-1)&sta ){  
+                    if( dp[sta][i] > dp[sta^j][i]+dp[j][i] )  
+                        dp[sta][i] = dp[sta^j][i]+dp[j][i];  
+                }  
+            }  
+            for( int i = 0 ; i <= n+m ; ++i ){  
+                for( int j = 0 ; j <= n+m ; ++j )  
+                    if( dp[sta][i] > dp[sta][j]+dis[j][i] )  
+                        dp[sta][i] = dp[sta][j]+dis[j][i];  
+            }  
+        }  
+    }  
+}  
+  
+void floyed( int n )  
+{  
+    for( int k = 0 ; k <= n ; ++k ){  
+        for( int i = 0 ; i <= n ; ++i ){  
+            for( int j = 0 ; j <= n ; ++j ){  
+                dis[i][j] = min( dis[i][j] , dis[i][k]+dis[k][j] );  
+            }  
+        }  
+    }  
+}  
+  
+int main()  
+{  
+//    freopen("1.in","r",stdin);  
+//    freopen("yuan.out","w",stdout);  
+    int T;  
+    scanf("%d",&T);  
+    while( T-- ){  
+        memset( dis , -1 , sizeof(dis) );  
+        int n,m;  
+        scanf("%d%d",&n,&m);  
+        for( int i = 1 ; i <= n ; ++i ){  
+            for( int j = 1 ; j <= n ; ++j ){  
+                scanf("%d",&dis[i][j]);  
+            }  
+        }  
+        int a,b;  
+        for( int i = 0 ; i < m ; ++i ){  
+            scanf("%d%d",&a,&b);  
+            dis[0][a] = dis[a][0] = b;  
+            //标记老板想要哪些员工知道消息，老板与这些员工间的连边为花费  
+            st[i] = a;  
+        }  
+        for( int i = 1 ; i <= n ; ++i ){  
+            if( dis[0][i] == -1 ){  
+                //对于某些不一定要知道消息的员工，老板与他们间的连边为无穷  
+                dis[0][i] = dis[i][0] = INF;  
+            }  
+        }  
+        dis[0][0] = 0;  
+        floyed(n);  
+        cal(m,n-m);  
+        printf("%d\n",dp[move(m)-1][0]);  
+    }  
+    return 0;  
+}  

@@ -1,0 +1,76 @@
+#include <iostream>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
+#include <algorithm>
+#include <string>
+#include <stack>
+#include <queue>
+
+using namespace std;
+
+typedef long long ll;
+const int N = 1000100;
+const int M = 1000;
+const int INF = 0x3fffffff;
+const double eps = 1e-8;
+const double PI = acos(-1.0);
+
+struct Edge{
+    int node;
+    Edge*next;
+}m_edge[N];
+int girl[M];
+Edge*head[M];
+int Flag[M],Ecnt,cnt;
+
+void init()
+{
+    Ecnt = cnt = 0;
+    fill( girl , girl+M , 0 );
+    fill( head , head+M , (Edge*)0 );
+}
+
+//b对g有好感
+void mkEdge( int b , int g )
+{
+    m_edge[Ecnt].node = g;
+    m_edge[Ecnt].next = head[b];
+    head[b] = m_edge+Ecnt++;
+}
+
+bool find( int x )
+{
+    for( Edge*p = head[x] ; p ; p = p->next ){
+        int s = p->node;   //有好感的女生
+        if( !Flag[s] ){
+            Flag[s] = true; //该女生在本轮匹配中被访问
+            if( girl[s] == 0 || find(girl[s]) ){
+                //女生没有对象或者另外一个男生能把这个妹纸让给x男
+                girl[s] = x;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+//构建二分图
+void Build()
+{
+    
+}
+
+void solve( int n )
+{
+    for( int i =  1 ; i <= n ; ++i ){
+        fill( Flag , Flag+M , 0 );
+        if( find(i) ) ++cnt;
+    }
+}
+
+int main()
+{
+    
+    return 0;
+}

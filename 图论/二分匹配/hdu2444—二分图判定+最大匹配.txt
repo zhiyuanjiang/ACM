@@ -1,0 +1,119 @@
+#include <iostream>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
+#include <algorithm>
+#include <string>
+#include <stack>
+#include <queue>
+#include <set>
+
+using namespace std;
+
+typedef long long ll;
+const int N = 40900;
+const int M = 209;
+const int INF = 0x3fffffff;
+const double eps = 1e-8;
+const double PI = acos(-1.0);
+
+struct Edge{
+    int node;
+    Edge*next;
+}m_edge[N*2];
+int girl[M];
+Edge*head[M];
+int Flag[M],color[M],Ecnt,cnt;
+
+void init()
+{
+    Ecnt = cnt = 0;
+    fill( girl , girl+M , 0 );
+    fill( color , color+M , -1 );
+    fill( head , head+M , (Edge*)0 );
+}
+
+//染色法判断是否为二分图
+bool judge( int u )
+{
+    for( Edge*p = head[u] ; p ; p = p->next ){
+        int v = p->node;
+        if( color[v] == color[u] ) return false;
+        if( color[v] == -1 ){
+            color[v] = color[u]^1;
+            if( !judge(v) ) return false;
+        }
+    }
+    return true;
+}
+
+//b对g有好感
+void mkEdge( int b , int g )
+{
+    m_edge[Ecnt].node = g;
+    m_edge[Ecnt].next = head[b];
+    head[b] = m_edge+Ecnt++;
+}
+
+bool find( int x )
+{
+    for( Edge*p = head[x] ; p ; p = p->next ){
+        int s = p->node;   //有好感的女生
+        if( !Flag[s] ){
+            Flag[s] = true; //该女生在本轮匹配中被访问
+            if( girl[s] == 0 || find(girl[s]) ){
+                //女生没有对象或者另外一个男生能把这个妹纸让给x男
+                girl[s] = x;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+//构建二分图
+void Build( int m )
+{
+    int a,b;
+    for( int i = 0 ; i < m ; ++i ){
+        scanf("%d%d",&a,&b);
+        //建立双倍的边
+        //假如一般的二分图点集为x，y
+        //那么现在点集x'和y'都包含了x，y
+        //即可以将这个二分图看成两个部分，从x->y,从y->x
+        //最后得到的最大匹配数加倍
+        mkEdge(a,b);
+        mkEdge(b,a);
+    }
+}
+
+void solve( int n )
+{
+    for( int i =  1 ; i <= n ; ++i ){
+        fill( Flag , Flag+M , 0 );
+        if( find(i) ) ++cnt;
+    }
+}
+
+int main()
+{
+    int n,m;
+    while( ~scanf("%d%d",&n,&m) ){
+        init();
+        Build(m);
+        int flag = 0;
+        for( int i = 1 ; i <= n ; ++i ){
+            if( color[i] != -1 ) continue;
+            color[i] = 1;
+            if( !judge(i) ){
+                flag = 1; break;
+            }
+        }
+        if( flag ) printf("No\n");
+        else{
+            solve(n);
+            printf("%d\n",cnt/2);
+        }
+    }
+    return 0;
+}

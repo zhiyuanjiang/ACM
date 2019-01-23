@@ -1,0 +1,31 @@
+map是一种用红黑树实现的关联式容器，实现了键值对的映射,不会出现重复的键
+查找，插入，删除的时间复杂度为log(n)
+
+声明
+map<string,int>mp;
+
+插入
+1.用[]进行单个插入
+mp["yuan"] = 1;  //若键值"yuan"已存在，则会做赋值修改操作
+2.用mp.insert(pair<string,int>);//返回pair<iterator,bool>
+
+取值
+用[],若键不存在，则会插入该键
+用at,若键不存在，则会报错
+
+容量查询
+empty()
+size()
+count()
+
+迭代器
+begin()
+end()
+
+删除
+erase(iterator)  //删除迭代器指向位置的键值对，并返回一个指向下一个元素的迭代器
+erase(key_type)
+clear()
+
+查找
+find(key_type)  //返回指向该键的迭代器

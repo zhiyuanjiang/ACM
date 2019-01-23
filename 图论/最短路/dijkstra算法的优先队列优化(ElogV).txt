@@ -1,0 +1,70 @@
+#include <cstdio>
+#include <queue>
+
+using namespace std;
+
+const int maxn = 1000;
+const int INF = 0x3fffffff;
+
+//dijkstra算法优先队列优化,0(ElogV)
+
+struct Edge{
+    int node,len;
+    Edge*next;
+}m_edge[maxn];
+Edge*head[maxn];
+int Ecnt,dist[maxn],flag[maxn];
+
+void init()
+{
+    Ecnt = 0;
+    fill( head , head+maxn , (Edge*)0 );
+}
+
+void mkEdge( int a , int b , int c )
+{
+    m_edge[Ecnt].node = b;
+    m_edge[Ecnt].len = c;
+    m_edge[Ecnt].next = head[a];
+    head[a] = m_edge+Ecnt++;
+}
+
+struct HeapNode{
+    int d,u;
+    HeapNode(int _d,int _u){
+        d = _d; u = _u;
+    }
+    bool operator < (const HeapNode&a) const{
+        return d > a.d;
+    }
+};
+
+void dijkstra(int s)
+{
+    priority_queue<HeapNode>Q;
+    fill( dist , dist+maxn , INF );
+    fill( flag , flag+maxn , 0 );;
+    dist[s] = 0;
+    Q.push(HeapNode(0,s));
+
+    while( !Q.empty() ){
+        HeapNode x = Q.top();
+        Q.pop();
+        int u = x.u;
+        if(flag[u]) continue;
+        flag[u] = 1;
+        for( Edge*p = head[u] ; p ; p = p->next ){
+            int v = p->node;
+            if( dist[v] > dist[u]+p->len ){
+                dist[v] = dist[u]+p->len;
+                Q.push(HeapNode(dist[v],v));
+            }
+        }
+    }
+}
+
+int main()
+{
+
+    return 0;
+}

@@ -1,0 +1,102 @@
+#include <iostream>
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+#include <string>
+
+using namespace std;
+
+const int maxn = 10010;
+int A[maxn];
+int Sum[maxn<<2],Add[maxn<<2]; //Sum求和,Add为懒惰标记
+
+void init()
+{
+    memset(Add,0,sizeof(Add));
+}
+//更新结点信息
+void PushUp(int rt)
+{
+    Sum[rt] = Sum[rt<<1]+Sum[rt<<1|1];
+}
+
+//建树
+void Build(int l,int r,int rt)
+{
+    if(l == r){
+        Sum[rt] = A[l];
+        return;
+    }
+    int m = (l+r)>>1;
+    Build(l,m,rt<<1);
+    Build(m+1,r,rt<<1|1);
+    
+    PushUp(rt);
+}
+
+//点修改  A[L] += C;
+void Update(int L,int C,int l,int r,int rt)
+{
+    if(l == r){
+        Sum[rt] += C;
+        return;
+    }
+    int m = (l+r)>>1;
+    if(L <= m) Update(L,C,l,m,rt<<1);
+    else  Update(L,C,m+1,r,rt<<1|1);
+    PushUp(rt);
+}
+
+//下推标记
+void PushDown(int rt,int ln,int rn)
+{
+    //ln,rn为左子树，右子树的数字数量
+    if(Add[rt]){
+        //下推标记
+        Add[rt<<1] += Add[rt];
+        Add[rt<<1|1] += Add[rt];
+        //修改子节点的Sum使之与对应的Add相对应
+        Sum[rt<<1] += Add[rt]*rt;
+        Sum[rt<<1|1] += Add[rt]*rn;
+        
+        Add[rt] = 0;
+    }
+}
+
+//区间修改  A[L,R] += C;
+void Update(int L,int R,int C,int l,int r,int rt)
+{
+    if(L <= l && r <= R){
+        Sum[rt] += C*(r-l+1);
+        Add[rt] += C;
+        return;
+    }
+    int m = (l+r)>>1;
+    PushDown(rt,m-l+1,r-m);
+    
+    if(L <= m) Update(L,R,C,l,m,rt<<1);
+    if(R >  m) Update(L,R,C,m+1,r,rt<<1|1);
+    PushUp(rt);
+}
+
+//查询
+int Query(int L,int R,int l,int r,int rt)
+{
+    if(L <= l && r <= R){
+        return Sum[rt];
+    }
+    int m = (l+r)>>1;
+    //下推标记
+    PushDown(rt,m-l+1,r-m);
+    
+    int ans = 0;
+    if(L <= m) ans += Query(L,R,l,m,rt<<1);
+    if(R >  m) ans += Query(L,R,m+1,r,rt<<1|1);
+    return ans;
+}
+
+int main()
+{
+
+    return 0;
+}

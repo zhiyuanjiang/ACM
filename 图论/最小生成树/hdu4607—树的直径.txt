@@ -1,0 +1,88 @@
+#include <iostream>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
+#include <algorithm>
+
+using namespace std;
+
+const int N = 20090;
+const int M = 100900;
+
+//树的直径:树上的最长简单路
+//以某个点u为根搜索，找到到u最长的距离的点，那么改点一定是树中某条最长路的端点
+//再以该点为根节点，找到到改点最长的距离
+
+
+struct Edge{
+    int node,len;
+    Edge*next;
+}m_edge[M*2];
+Edge*head[M];
+int Ecnt,vis[M],dp[M];
+
+void init()
+{
+    Ecnt = 0;
+    fill( head , head+M , (Edge*)0 );
+}
+
+void mkEdge(int a,int b)
+{
+    m_edge[Ecnt].node = b;
+    m_edge[Ecnt].len = 1;
+    m_edge[Ecnt].next = head[a];
+    head[a] = m_edge+Ecnt++;
+}
+
+void dfs(int u)
+{
+    vis[u] = 1;
+    for( Edge*p = head[u] ; p ; p = p->next ){
+        int v = p->node;
+        if( vis[v] ) continue;
+        dp[v] = dp[u]+p->len;
+        dfs(v);
+    }
+}
+
+int main()
+{
+    int T;
+    scanf("%d",&T);
+    while( T-- ){
+        init();
+        int n,m,a,b;
+        scanf("%d%d",&n,&m);
+        for( int i = 0 ; i < n-1 ; ++i ){
+            scanf("%d%d",&a,&b);
+            mkEdge(a,b);
+            mkEdge(b,a);
+        }
+
+        int node,ans = 0;
+        memset(dp,0,sizeof(dp));
+        memset(vis,0,sizeof(vis));
+        dfs(1);
+        for( int i = 1 ; i <= n ; ++i ){
+            if( dp[i] > ans ){
+                ans = dp[i];
+                node = i;
+            }
+        }
+
+        memset(dp,0,sizeof(dp));
+        memset(vis,0,sizeof(vis));
+        dfs(node);
+        ans = 0;
+        for( int i = 1 ; i <= n ; ++i )
+            ans = max(ans,dp[i]);
+
+        for( int i = 0 ; i < m ; ++i ){
+            scanf("%d",&a);
+            if( a <= ans+1 ) printf("%d\n",a-1);
+            else printf("%d\n",2*a-2-ans);
+        }
+    }
+    return 0;
+}

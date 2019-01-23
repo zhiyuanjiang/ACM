@@ -1,0 +1,192 @@
+#include <iostream>
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+
+using namespace std;
+
+//#pragma comment(linker, "/STACK:1024000000,1024000000")
+
+const int maxn = 10010;
+const int N = 50010;
+
+//hdu3966
+//写得心态奔溃,写树上搜索,数组开小了,写线段树,懒惰标记写错了。
+
+/*
+树链剖分
+http://blog.csdn.net/acdreamers/article/details/10591443
+*/
+
+struct Edge{
+    int node;
+    Edge*next;
+}edge[N*2];
+Edge*head[N];
+
+int Ecnt,index;
+
+int sz[N],top[N],son[N],dep[N],fa[N],tid[N],rk[N];
+
+void init()
+{
+    Ecnt = index = 0;
+    memset(son,-1,sizeof(son));
+    fill(head,head+N,(Edge*)0);
+}
+
+void mkEdge(int a,int b)
+{
+    edge[Ecnt].node = b;
+    edge[Ecnt].next = head[a];
+    head[a] = edge+Ecnt++;
+}
+
+//记录所有重边
+void dfs1(int u,int father,int d)
+{
+    dep[u] = d;
+    fa[u] = father;
+    sz[u] = 1;
+    for(Edge*p = head[u]; p; p = p->next){
+        int v = p->node;
+        if(v != father){
+            dfs1(v,u,d+1);
+            sz[u] += sz[v];
+            if(son[u] == -1 || sz[v] > sz[son[u]]){
+                son[u] = v;
+            }
+        }
+    }
+}
+
+//连接所有重链
+void dfs2(int u,int tp)
+{
+    top[u] = tp;
+    tid[u] = ++index;
+    rk[tid[u]] = u;
+    if(son[u] == -1) return;
+    dfs2(son[u],tp);
+    for(Edge*p = head[u]; p; p = p->next){
+        int v = p->node;
+        if(v != son[u] && v != fa[u]){
+            dfs2(v,v);
+        }
+    }
+}
+
+int Add[N<<2],A[N<<2],data[N];
+
+void Build(int l,int r,int rt)
+{
+    if(l == r){
+        A[rt] = data[rk[l]];
+        return;
+    }
+    int m = (l+r)>>1;
+    Build(l,m,rt<<1);
+    Build(m+1,r,rt<<1|1);
+}
+
+void PushDown(int rt)
+{
+    if(Add[rt]){
+        Add[rt<<1] += Add[rt];
+        Add[rt<<1|1] += Add[rt];
+
+        A[rt<<1] += Add[rt];
+        A[rt<<1|1] += Add[rt];
+
+        Add[rt] = 0;
+    }
+}
+
+void Update(int L,int R,int C,int l,int r,int rt)
+{
+    if(L <= l && r <= R){
+        A[rt] += C;
+        Add[rt] += C;
+        return;
+    }
+    PushDown(rt);
+    int m = (l+r)>>1;
+    if(L <= m)  Update(L,R,C,l,m,rt<<1);
+    if(R >  m)  Update(L,R,C,m+1,r,rt<<1|1);
+}
+
+int Query(int L,int l,int r,int rt)
+{
+    if(l == r){
+        return A[rt];
+    }
+    PushDown(rt);
+    int m = (l+r)>>1;
+    if(L <= m) return Query(L,l,m,rt<<1);
+    else return Query(L,m+1,r,rt<<1|1);
+}
+
+void solve(int L,int R,int C,int l,int r,int rt)
+{
+    int u = L,v = R,f1,f2;
+    while(u != v){
+        if(dep[u] > dep[v]){
+            swap(u,v);
+        }
+        f1 = top[u];
+        f2 = top[v];
+        if(f1 == f2){
+            Update(tid[son[u]],tid[v],C,l,r,rt);
+            v = u;
+        }else if(dep[f1] > dep[f2]){
+            Update(tid[f1],tid[u],C,l,r,rt);
+            u = fa[f1];
+        }else{
+            Update(tid[f2],tid[v],C,l,r,rt);
+            v = fa[f2];
+        }
+    }
+    Update(tid[u],tid[v],C,l,r,rt);
+}
+
+char st[10];
+
+int main()
+{
+    int m,n,q;
+    while(~scanf("%d%d%d",&n,&m,&q)){
+        init();
+        for(int i = 1; i <= n; ++i){
+            scanf("%d",&data[i]);
+        }
+        int a,b,c;
+        for(int i = 1; i <= m; ++i){
+            scanf("%d%d",&a,&b);
+            mkEdge(a,b);
+            mkEdge(b,a);
+        }
+        dfs1(1,0,1);
+        dfs2(1,1);
+
+        memset(Add,0,sizeof(Add));
+        memset(A,0,sizeof(A));
+        Build(1,n,1);
+        for(int i = 1; i <= q; ++i){
+            scanf(" %s%d",st,&a);
+            if(st[0] == 'I'){
+                scanf("%d%d",&b,&c);
+                solve(a,b,c,1,n,1);
+            }
+            if(st[0] == 'D'){
+                scanf("%d%d",&b,&c);
+                solve(a,b,-c,1,n,1);
+            }
+            if(st[0] == 'Q'){
+                printf("%d\n",Query(tid[a],1,n,1));
+            }
+        }
+    }
+    return 0;
+}
+
+

@@ -1,0 +1,106 @@
+#include <iostream>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
+#include <algorithm>
+#include <string>
+#include <stack>
+#include <queue>
+#include <set>
+#include <map>
+
+using namespace std;
+
+typedef long long ll;
+typedef pair<int,int>PA;
+const int N = 150900;
+const int M = 510;
+const int INF = 0x3fffffff;
+const double eps = 1e-8;
+const double PI = acos(-1.0);
+
+struct Edge{
+    int node;
+    Edge*next;
+}m_edge[N*2];
+Edge*head[M];
+int Ecnt,match[M],Flag[M];
+
+void init()
+{
+    Ecnt = 0;
+    fill(head,head+M,(Edge*)0);
+}
+
+void mkEdge(int a,int b)
+{
+    m_edge[Ecnt].node = b;
+    m_edge[Ecnt].next = head[a];
+    head[a] = m_edge+Ecnt++;
+}
+
+bool find(int u)
+{
+    for( Edge*p = head[u] ; p ; p = p->next ){
+        int v = p->node;
+        if( !Flag[v] ){
+            Flag[v] = 1;
+            if( match[v] == 0 || find(match[v]) ){
+                match[v] = u;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+struct Student{
+    int height;
+    char sex;
+    char music[106];
+    char sport[106];
+}Stu[M];
+
+void Build( int n )
+{
+    for( int i = 0 ; i < n ; ++i ){
+        for( int j = i+1 ; j < n ; ++j ){
+            //if( i == j ) continue;
+            if( abs(Stu[i].height-Stu[j].height) <= 40 &&
+                Stu[i].sex != Stu[j].sex &&
+                strcmp(Stu[i].music,Stu[j].music) == 0 &&
+                strcmp(Stu[i].sport,Stu[j].sport) != 0 ){
+                    mkEdge(i,j);
+                    mkEdge(j,i);
+                }
+        }
+    }
+}
+
+int solve( int n )
+{
+    Build(n);
+    int cnt = 0;
+    memset(match,0,sizeof(match));
+    for( int i = 0 ; i < n ; ++i ){
+        fill(Flag,Flag+M,0);
+        if( find(i) ) cnt++;
+    }
+    return n-cnt/2;
+}
+
+int main()
+{
+    int T,n;
+    scanf("%d",&T);
+    while( T-- ){
+        init();
+        scanf("%d",&n);
+        for( int i = 0 ; i < n ; ++i ){
+            scanf("%d %c %s %s",&Stu[i].height,
+                  &Stu[i].sex,&Stu[i].music,&Stu[i].sport);
+        }
+        printf("%d\n",solve(n));
+    }
+    return 0;
+}

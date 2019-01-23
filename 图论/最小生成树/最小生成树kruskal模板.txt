@@ -1,0 +1,68 @@
+#include <iostream>
+#include <stack>
+#include <vector>
+#include <cstdio>
+#include <cstring>
+#include <algorithm>
+using namespace std;
+const int INF = 0x3fffffff;
+const int N = 50030;
+const int M = 100300;
+typedef int MyType;
+
+struct Edge{
+    int u,v;
+    MyType len;
+    bool operator < (const Edge&a)const{
+        return a.len > len;
+    }
+}edge[M];
+int Ecnt,parent[N];
+
+void init()
+{
+    Ecnt = 0;
+    memset(parent,0,sizeof(parent));
+}
+
+int find(int a)
+{
+    while(a != parent[a]){
+        parent[a] = parent[parent[a]];
+        a = parent[a];
+    }
+    return a;
+}
+
+void merge(int a,int b)
+{
+    int i = find(a);
+    int j = find(b);
+    if( i != j ) parent[i] = j;
+}
+
+MyType kruskal(int n,int m)
+{
+    sort(edge,edge+m);
+    int Count = 0;
+    MyType len = 0;
+
+    for( int i = 0 ; i < m ; ++i ){
+        int u = edge[i].u;
+        int v = edge[i].v;
+        if(find(u) != find(v)){
+            len += edge[i].len;
+            Count++;
+            merge(u,v);
+        }
+        if( Count == n-1 ) break;
+    }
+
+    return len;
+}
+
+int main()
+{
+
+    return 0;
+}

@@ -1,0 +1,85 @@
+#include <iostream>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
+#include <algorithm>
+
+using namespace std;
+
+const int N = 20090;
+const int M = 100000;
+
+//树的重心:删掉这个节点后将树分成几个部分，使得这几个部分中点个数的最大值最小
+//以每个点作为根节点搜一次，求得改点的子树中点数的最大值，然后求其中的最小值
+//但是复杂度为0(n^2)肯定TLE
+//其实只要以某个节点u为根搜一次就可以了。
+//当向下搜到某个节点v时，我们可以求出节点v的子树中最大的节点数
+//这时只要再和节点v的非子树节点数比较就行了，假如节点v的子树节点数为m,节点数为n
+//显然节点v的非子树节点数为n-m-1，这样就相当于求出了去掉v后，子树中节点数最大的值
+
+struct Edge{
+    int node;
+    Edge*next;
+}m_edge[N*2];
+Edge*head[N];
+int Ecnt,vis[N],son[N];
+int Num,Size; //树的重心的编号，划分后的最大值
+
+void init()
+{
+    Ecnt = 0; Num = 0; Size = INT_MAX;
+    fill( head , head+N , (Edge*)0 );
+    fill( vis , vis+N , 0 );
+}
+
+void mkEdge( int a , int b )
+{
+    m_edge[Ecnt].node = b;
+    m_edge[Ecnt].next = head[a];
+    head[a] = m_edge+Ecnt++;
+}
+
+int n;  //节点个数
+void dfs( int u )
+{
+    vis[u] = 1;
+    son[u] = 0;
+    int temp = 0;
+
+    for( Edge*p = head[u] ; p ; p = p->next ){
+        int v = p->node;
+        if( !vis[v] ){
+            dfs(v);
+            //子树中节点数的最大值
+            temp = max(temp,son[v]+1);
+            //节点u的子树树
+            son[u] += son[v]+1;
+        }
+    }
+    //与非子树节点数比较
+    temp = max(temp,n-son[u]-1);
+
+    if( temp < Size || temp == Size&&u < Num ){
+        Size = temp;
+        Num = u;
+    }
+}
+
+int main()
+{
+    int T;
+    scanf("%d",&T);
+    while( T-- ){
+        init();
+        int a,b;
+        scanf("%d",&n);
+        for( int i = 0 ; i < n-1 ; ++i ){
+            scanf("%d%d",&a,&b);
+            mkEdge(a,b);
+            mkEdge(b,a);
+        }
+        dfs(1);
+        printf("%d %d\n",Num,Size);
+    }
+    return 0;
+}

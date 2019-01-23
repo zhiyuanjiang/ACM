@@ -1,0 +1,57 @@
+#include <iostream>
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+#include <ctime>
+
+using namespace std;
+
+/*
+    πÈ≤¢≈≈–Ú£∫nlog(n)
+*/
+
+const int N = 110;
+const int INF = 0x3ffffff;
+
+int data[N];
+
+void Merge(int a[],int b[],int first,int mid,int last)
+{
+    int i = first,j = mid+1;
+    int k = 0;
+
+    while(i <= mid && j <= last){
+        if(a[i] > a[j]) b[k++] = a[j++];
+        else b[k++] = a[i++];
+    }
+
+    while(i <= mid) b[k++] = a[i++];
+    while(j <= last) b[k++] = a[j++];
+
+    for(int i = 0; i < k; ++i)
+        a[i+first] = b[i];
+}
+
+void MergeSort(int a[],int b[],int first,int last)
+{
+    if(first < last){
+        int m = (first+last) >> 1;
+        MergeSort(a,b,first,m);
+        MergeSort(a,b,m+1,last);
+        Merge(a,b,first,m,last);
+    }
+}
+
+int a[N],b[N];
+
+int main()
+{
+    srand(time(NULL));
+    for(int i = 1; i <= 10; ++i){
+        a[i] = rand()%100;
+    }
+    MergeSort(a,b,1,10);
+    for(int i = 1; i <= 10; ++i)
+        cout << a[i] << endl;
+    return 0;
+}

@@ -1,0 +1,93 @@
+#include <iostream>
+#include <vector>
+#include <cstring>
+#include <algorithm>
+
+using namespace std;
+typedef long long ll;
+
+const int mod = 1e9+7;
+
+struct Matrax
+{
+    int r,c;
+    ll a[4][4];
+    Matrax(){
+        memset(a,0,sizeof(a));
+    }
+};
+
+ll Mod(ll n)
+{
+    return (n+mod)%mod;
+}
+
+Matrax Multi_Matrax(Matrax x,Matrax s)
+{
+    Matrax ans;
+    ans.r = x.r; ans.c = s.c;
+    for( int i = 0 ; i < ans.r ; ++i ){
+        for( int j = 0 ; j < ans.c ; ++j ){
+            for( int k = 0 ; k < x.c ; ++k ){
+                ans.a[i][j] = (ans.a[i][j]+(x.a[i][k]*s.a[k][j]))%mod;
+            }
+        }
+    }
+    return ans;
+}
+
+Matrax Fast_Matrax(Matrax x,ll n)
+{
+    Matrax ans;
+    ans.r = ans.c = 4;
+    for( int i = 0 ; i < 4 ; ++i ) ans.a[i][i] = 1;
+    while(n){
+        if(n&1) ans = Multi_Matrax(ans,x);
+        x = Multi_Matrax(x,x);
+        n >>= 1;
+    }
+    return ans;
+}
+
+int main()
+{
+    int T;
+    scanf("%d",&T);
+    while(T--){
+        ll n,a,b,c,d;
+        scanf("%lld%lld%lld%lld%lld",&n,&a,&b,&c,&d);
+        a = Mod(a);
+        b = Mod(b);
+        c = Mod(c);
+        d = Mod(d);
+
+        ll f[4];
+        f[0] = 4;
+        f[1] = Mod(-a);
+        f[2] = Mod(Mod(a*a)-Mod(2*b));
+        f[3] = Mod(Mod(f[1]*f[2])+Mod(b*a)-Mod(3*c));
+
+        Matrax s;
+        s.r = s.c = 4;
+        s.a[0][0] = Mod(-a);
+        s.a[0][1] = Mod(-b);
+        s.a[0][2] = Mod(-c);
+        s.a[0][3] = Mod(-d);
+        s.a[1][0] = 1;
+        s.a[2][1] = 1;
+        s.a[3][2] = 1;
+
+        ll ans;
+
+        if(n <= 3){
+            ans = f[n];
+        }else {
+            Matrax re = Fast_Matrax(s,n-3);
+            ans = (re.a[0][0]*f[3]%mod+re.a[0][1]*f[2]%mod
+                   +re.a[0][2]*f[1]%mod+re.a[0][3]*f[0]%mod)%mod;
+        }
+
+        printf("%lld\n",ans);
+    }
+    return 0;
+}

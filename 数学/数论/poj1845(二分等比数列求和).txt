@@ -1,0 +1,84 @@
+#include <iostream>
+#include <cstring>
+#include <string>
+#include <algorithm>
+#include <cstdio>
+
+using namespace std;
+typedef long long ll;
+
+const int N = 10000;
+const int mod = 9901;
+
+int isNotPrime[N],isPrime[N],num_prime;
+
+void getPrime()
+{
+    memset(isNotPrime,0,sizeof(isNotPrime));
+    num_prime = 0;
+    for( int i = 2 ; i < N ; ++i ){
+        if(!isNotPrime[i]) isPrime[num_prime++] = i;
+        for( int j = 0 ; j < num_prime && i*isPrime[j] < N ; ++j ){
+            isNotPrime[i*isPrime[j]] = 1;
+            if(i%isPrime[j] == 0) break;
+        }
+    }
+}
+
+ll fast_mi(ll x,ll n)
+{
+    ll ans = 1;
+    while(n){
+        if(n&1) ans = ans*x%mod;
+        x = x*x%mod;
+        n >>= 1;
+    }
+    return ans;
+}
+
+//using dichotomy to calculate the sum of geometric sequence
+ll sum(ll a,ll n)
+{
+    if(n == 1) return a%mod;
+    ll s = sum(a,n/2);
+
+    if(n&1){
+        s = (((1+fast_mi(a,(n-1)/2))*s)%mod+fast_mi(a,n))%mod;
+    }else{
+        s = ((1+fast_mi(a,n/2))*s)%mod;
+    }
+
+    return s;
+}
+
+ll solve(ll a,ll b)
+{
+    ll cnt,ans = 1;
+    for( int i = 0 ; isPrime[i]*isPrime[i] <= a && i < num_prime ; ++i ){
+        if(a%isPrime[i] == 0){
+            cnt = 0;
+            while(a%isPrime[i] == 0){
+                cnt++;
+                a /= isPrime[i];
+            }
+            ans = ans*(sum(isPrime[i],cnt*b)+1)%mod;
+        }
+    }
+    if(a > 1)
+        ans = ans*(sum(a,b)+1)%mod;
+
+    return ans;
+}
+
+
+
+int main()
+{
+    getPrime();
+    ll A,B;
+    while(~scanf("%lld%lld",&A,&B)){
+        if(B == 0) {printf("%d\n",1); continue;}
+        printf("%lld\n",solve(A,B));
+    }
+    return 0;
+}

@@ -1,0 +1,132 @@
+#include <iostream>
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+
+using namespace std;
+
+const int N = 110;
+const int INF = 0x3ffffff;
+
+//赫夫曼树的编码和解码  O(n^2)
+
+struct HTNode{
+    int weight;
+    int parent;
+    int left,right;
+    HTNode(){
+        weight = left = right = parent = 0;
+    }
+}Ht[N];
+char st[N];
+
+//在1-n内查找parent = 0且权值最小的两个结点序号
+void select(int n,int&s1,int&s2)
+{
+    int ans = INF;
+    for(int i = 1; i <= n; ++i){
+        if(Ht[i].parent == 0 && ans > Ht[i].weight){
+            ans = Ht[i].weight;
+            Ht[i].parent = -1;
+            s1 = i;
+        }
+    }
+    ans = INF;
+    int tick = 0;
+    for(int i = 1; i <= n; ++i){
+        if(Ht[i].parent == 0 && ans > Ht[i].weight){
+            ans = Ht[i].weight;
+            s2 = i;
+        }
+    }
+}
+
+//获取每个字符的编码
+void getCoding(int root,int index)
+{
+    if(Ht[root].left){
+        st[index++] = '0';
+        getCoding(Ht[root].left,index);
+        --index;
+    }
+
+    if(Ht[root].right){
+        st[index++] = '1';
+        getCoding(Ht[root].right,index);
+        --index;
+    }
+
+    st[index] = '\0';
+    printf("%d:%s\n",Ht[root].weight,st);
+}
+
+int num = 0,tick = 0;
+char encode[N];
+
+int Encoding(char st[],int index,int root)
+{
+    if(st[index] == '0' && Ht[root].left){
+        Encoding(st,index+1,Ht[root].left);
+    }
+
+    if(st[index] == '1' && Ht[root].right){
+        Encoding(st,index+1,Ht[root].right);
+    }
+
+    if(!Ht[root].left && !Ht[root].right){
+        encode[num++] = Ht[root].weight+'0';
+        tick = index;
+    }
+}
+
+void solve(char st[],int root)
+{
+    int len = strlen(st);
+    while(tick < len){
+        Encoding(st,tick,root);
+    }
+    encode[num] = '\0';
+    printf("result is %s\n",encode);
+}
+
+//data:n个字符的权值
+void HuffmanCoding(int data[],int n)
+{
+    int s1,s2,m;
+    if(n <= 1) return;
+    m = 2*n-1;    //树的结点个数
+    for(int i = 1; i <= n; ++i) Ht[i].weight = data[i];
+    for(int i = n+1; i <= m; ++i){
+        select(i-1,s1,s2);
+        Ht[s1].parent = Ht[s2].parent = i;
+        Ht[i].left = s2;
+        Ht[i].right = s1;
+        Ht[i].weight = Ht[s1].weight+Ht[s2].weight;
+    }
+
+    //getCoding(m,0);
+}
+
+void inOrder(int root)
+{
+    cout << Ht[root].weight << endl;
+
+    if(Ht[root].left)
+        inOrder(Ht[root].left);
+
+    if(Ht[root].right)
+        inOrder(Ht[root].right);
+}
+
+int data[N];
+
+int main()
+{
+    int n = 4;
+    for(int i = 1; i <= 4; ++i) data[i] = i;
+    HuffmanCoding(data,4);
+    //inOrder(2*n-1);
+    char st[] = "001000";
+    solve(st,7);
+    return 0;
+}

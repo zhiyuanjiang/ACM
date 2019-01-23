@@ -1,0 +1,88 @@
+#include <iostream>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
+#include <algorithm>
+#include <string>
+#include <stack>
+#include <queue>
+#include <set>
+
+using namespace std;
+
+typedef long long ll;
+const int N = 40900;
+const int M = 1090;
+const int INF = 0x3fffffff;
+const double eps = 1e-8;
+const double PI = acos(-1.0);
+
+//low[u]是从u或者u的子孙出发通过回边可以到达的最低深度优先数
+//low[u] = min{ dfn[u] ,
+//              min{ low[w] | w是u的一个子女 } ,
+//              min{ dfn[v] | v与u邻接，且(u,v)是一条回边} }
+
+/*
+    u是割点的充要条件
+    u是深度优先搜索生成树的根，则u至少有两个子女
+    u不是生成树的根，但他有个子女w，使得low[w]>=dfn[u]
+
+    去掉割点u后，分成几个联通分量
+    u是根节点，联通分量个数就是子女个数
+    u不是根节点，若有d个子女w，使得low[w]>=dfn[u],去掉点u，分成d+1个联通分量
+*/
+
+//向下搜索时，如果顶点v是u的相邻顶点，若v还未被访问，则v是u的儿子节点
+//若v被访问了，则v是u的祖先节点，且(u,v)是一条回边
+
+struct Edge{
+    int node;
+    Edge*next;
+}m_edge[N];
+Edge*head[M];
+int low[M],dfn[M],Flag[M],Ecnt,cnt;
+int subnet[M],son,r;
+//son记录根节点的子树个树，r为根节点
+//subnet记录对于节点u的子节点v，low[v]>=dfn[u]的个数
+
+void init()
+{
+    r = 1;
+    Ecnt = cnt = son = 0;
+    fill( subnet , subnet+M , 0 );
+    fill( Flag , Flag+M , 0 );
+    fill( head , head+M , (Edge*)0 );
+}
+
+void mkEdge( int a , int b )
+{
+    m_edge[Ecnt].node = b;
+    m_edge[Ecnt].next = head[a];
+    head[a] = m_edge+Ecnt++;
+}
+
+void tarjan( int u , int father )  
+{  
+    Flag[u] = 1;  
+    low[u] = dfn[u] = cnt++;  
+    for( Edge*p = head[u] ; p ; p = p->next ){  
+        int v = p->node;  
+        if( !Flag[v] ){  
+            tarjan(v,u);  
+            low[u] = min(low[u],low[v]);  
+            if( low[v] >= dfn[u] ){  
+                if( u != r ) subnet[u]++;  
+                else son++;  
+            }  
+        }  
+        //v是u的祖先，且(u,v)是一条回边  
+        if( Flag[v] && v != father )  
+            low[u] = min(low[u],dfn[v]);  
+    }  
+}
+
+int main()
+{
+    
+    return 0;
+}

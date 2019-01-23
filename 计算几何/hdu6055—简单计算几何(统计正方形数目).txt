@@ -1,0 +1,66 @@
+#include <iostream>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
+#include <algorithm>
+#include <string>
+#include <stack>
+#include <queue>
+#include <set>
+#include <map>
+#include <vector>
+
+using namespace std;
+
+typedef long long ll;
+typedef pair<int,int>PA;
+const int N = 80010;
+const int M = 1090;
+const int INF = 0x3fffffff;
+const int mod = 1e9+7;
+const double eps = 1e-8;
+const double PI = acos(-1.0);
+
+int graph[M][M];
+vector<PA>st;
+
+//平面区域内给n个整点
+//求一个平面区域内的正方形个数
+
+bool judge( int x , int y )
+{
+    //忘了判断是否越界，wa了无数次
+    if( x+205 < 0 || y+205 < 0 ) return false;
+    if( graph[x+205][y+205] ) return true;
+    else return false;
+}
+
+int main()
+{
+    int n;
+    while( ~scanf("%d",&n) ){
+        memset( graph , 0 , sizeof(graph) );
+        st.clear();
+        int a,b;
+        for( int i = 0 ; i < n ; ++i ){
+            scanf("%d%d",&a,&b);
+            graph[a+205][b+205] = 1;
+            st.push_back(PA(a,b));
+        }
+        int x1,y1,x2,y2,cnt = 0;
+        for( int i = 0 ; i < n ; ++i ){
+            for( int j = 0 ; j < n ; ++j ){
+                if( i == j ) continue;
+                x1 = st[i].first;
+                y1 = st[i].second;
+                x2 = st[j].first;
+                y2 = st[j].second;
+                if( y1 == y2 ) continue;
+                if( x1>=x2&&y1>=y2&&judge(x1-(y1-y2),y1+(x1-x2))
+                   &&judge(x2-(y1-y2),y2+(x1-x2)) ) cnt++;
+            }
+        }
+        printf("%d\n",cnt);
+    }
+    return 0;
+}

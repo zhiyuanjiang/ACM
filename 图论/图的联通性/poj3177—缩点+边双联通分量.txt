@@ -1,0 +1,135 @@
+#include <iostream>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
+#include <algorithm>
+#include <string>
+#include <stack>
+#include <queue>
+#include <set>
+#include <map>
+#include <vector>
+
+using namespace std;
+
+typedef long long ll;
+typedef pair<int,int>PA;
+const int N = 10090;
+const int M = 5090;
+const int INF = 0x3fffffff;
+const double eps = 1e-8;
+const double PI = acos(-1.0);
+
+//将边双联通分量上的点缩成一个点
+//原图中的桥为新边，建立一颗树
+//要使树变成边双联通图，至少添加的边数:(树中的叶子节点数+1)/2
+
+struct Edge{
+    int node;
+    Edge*next;
+}m_edge[N*2];
+Edge*head[M];
+int low[M],dfn[M],flag[M],Ecnt,dep;
+map<PA,int>mp;
+int sta[M];  //统计新图中的叶子节点数
+
+void init()
+{
+    Ecnt = dep = 0;
+    fill( head , head+M , (Edge*)0 );
+    fill( flag , flag+M , 0 );
+    mp.clear();
+}
+
+void mkEdge( int a , int b )
+{
+    m_edge[Ecnt].node = b;
+    m_edge[Ecnt].next = head[a];
+    head[a] = m_edge+Ecnt++;
+}
+
+void tarjan( int u , int father )
+{
+    flag[u] = 1;
+    low[u] = dfn[u] = ++dep;
+    for( Edge*p = head[u] ; p ; p = p->next ){
+        int v = p->node;
+
+        if( !flag[v] ){
+            tarjan( v , u );
+            low[u] = min( low[u] , low[v] );
+            if( low[v] > dfn[u] ){
+                mp[PA(u,v)] = 1;
+            }
+        }
+
+        if( flag[v] && v != father ){
+            low[u] = min( low[u] , dfn[v] );
+        }
+    }
+}
+
+//求边联通分量，同一个联通分量上的点的flag指向的值相同
+void dfs( int u , int num )
+{
+    flag[u] = num;
+    for( Edge*p = head[u] ; p ; p = p->next ){
+        int v = p->node;
+        if( flag[v] ) continue;
+        if( mp.count(PA(u,v)) == 0 && mp.count(PA(v,u)) == 0 ){
+            dfs( v , num );
+        }
+    }
+}
+
+//初始建图
+void Build( int m )
+{
+    int a,b;
+    for( int i = 0 ; i < m ; ++i ){
+        scanf("%d%d",&a,&b);
+        mkEdge(a,b);
+        mkEdge(b,a);
+    }
+}
+
+int solve( int n )
+{
+    int num = 0;
+    memset( flag , 0 , sizeof(flag) );
+    for( int i = 1 ; i <= n ; ++i ){
+        if( !flag[i] ){
+            num++;
+            dfs( i , num );
+        }
+    }
+
+    memset( sta , 0 , sizeof(sta) );
+    for( map<PA,int>::iterator it = mp.begin() ;
+    it != mp.end() ; ++it ){
+        PA s = it->first;
+        sta[flag[s.first]]++;
+        sta[flag[s.second]]++;
+    }
+
+    //记录新树中的叶子节点
+    int Count = 0;
+    for( int i = 1 ; i <= num ; ++i ){
+        if( sta[i] == 1 ) Count++;
+    }
+
+    return Count;
+}
+
+int main()
+{
+    int n,m;
+    while( ~scanf("%d%d",&n,&m) ){
+        init();
+        Build( m );
+        tarjan( 1 , -1 );
+        int ans = solve( n );
+        printf("%d\n",(ans+1)/2);
+    }
+    return 0;
+}

@@ -1,0 +1,234 @@
+#include <iostream>
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+
+using namespace std;
+
+#define lson(rt)  (rt<<1)
+#define rson(rt)  (rt<<1|1)
+//#pragma comment(linker, "/STACK:1024000000,1024000000")
+
+const int maxn = 10010;
+const int N = 100010;
+
+struct Edge{
+    int node;
+    Edge*next;
+}edge[N*2];
+Edge*head[N];
+
+int Ecnt,m_index;
+
+int sz[N],top[N],son[N],dep[N],fa[N],tid[N],rk[N];
+
+void init()
+{
+    Ecnt = m_index = 0;
+    memset(son,-1,sizeof(son));
+    fill(head,head+N,(Edge*)0);
+}
+
+void mkEdge(int a,int b)
+{
+    edge[Ecnt].node = b;
+    edge[Ecnt].next = head[a];
+    head[a] = edge+Ecnt++;
+}
+
+void dfs1(int u,int father,int d)
+{
+    dep[u] = d;
+    fa[u] = father;
+    sz[u] = 1;
+    for(Edge*p = head[u]; p; p = p->next){
+        int v = p->node;
+        if(v != father){
+            dfs1(v,u,d+1);
+            sz[u] += sz[v];
+            if(son[u] == -1 || sz[v] > sz[son[u]]){
+                son[u] = v;
+            }
+        }
+    }
+}
+
+void dfs2(int u,int tp)
+{
+    top[u] = tp;
+    tid[u] = ++m_index;
+    rk[tid[u]] = u;
+    if(son[u] == -1) return;
+    dfs2(son[u],tp);
+    for(Edge*p = head[u]; p; p = p->next){
+        int v = p->node;
+        if(v != son[u] && v != fa[u]){
+            dfs2(v,v);
+        }
+    }
+}
+
+struct store{
+    int l,r,a;
+}A[N<<2];
+//a表示区间内的颜色段数,l和r分别是区间左右端点颜色
+
+int Add[N<<2],data[N];
+
+void PushUp(int rt)
+{
+    A[rt].l = A[lson(rt)].l;
+    A[rt].r = A[rson(rt)].r;
+    A[rt].a = A[lson(rt)].a+A[rson(rt)].a;
+    if(A[lson(rt)].r == A[rson(rt)].l){
+        A[rt].a--;
+    }
+}
+
+void Build(int l,int r,int rt)
+{
+    if(l == r){
+        A[rt].a = 1;
+        A[rt].l = A[rt].r = data[rk[l]];
+        return;
+    }
+    int m = (l+r)>>1;
+    Build(l,m,lson(rt));
+    Build(m+1,r,rson(rt));
+    PushUp(rt);
+}
+
+//延迟标记不能初始化为0,因为结点的值能为0
+void PushDown(int rt)
+{
+    if(Add[rt] != -1){
+        Add[lson(rt)] = Add[rt];
+        Add[rson(rt)] = Add[rt];
+
+        A[lson(rt)].a = 1;
+        A[lson(rt)].r = A[rson(rt)].l = Add[rt];
+        A[rson(rt)].a = 1;
+        A[rson(rt)].r = A[rson(rt)].l = Add[rt];
+
+        Add[rt] = -1;
+    }
+}
+
+void Update(int L,int R,int C,int l,int r,int rt)
+{
+    if(L <= l && r <= R){
+        A[rt].a = 1;
+        A[rt].l = A[rt].r = C;
+        Add[rt] = C;
+        return;
+    }
+    PushDown(rt);
+    int m = (l+r)>>1;
+    if(L <= m) Update(L,R,C,l,m,lson(rt));
+    if(R >  m) Update(L,R,C,m+1,r,rson(rt));
+    PushUp(rt);
+}
+
+int Query(int L,int R,int l,int r,int rt)
+{
+    if(L <= l && r <= R){
+        return A[rt].a;
+    }
+    PushDown(rt);
+    int m = (l+r)>>1,ans = 0;
+    if(L <= m) ans += Query(L,R,l,m,lson(rt));
+    if(R >  m) ans += Query(L,R,m+1,r,rson(rt));
+
+    if(L <= m && R > m){
+        if(A[lson(rt)].r == A[rson(rt)].l)
+            ans--;
+    }
+
+    return ans;
+}
+
+store check(int L,int l,int r,int rt)
+{
+    if(l == r){
+        return A[rt];
+    }
+    PushDown(rt);
+    int m = (l+r)>>1;
+    if(L <= m) return check(L,l,m,lson(rt));
+    else return check(L,m+1,r,rson(rt));
+}
+
+void solve_update(int L,int R,int C,int l,int r,int rt)
+{
+    int u = L,v = R;
+    while(top[u] != top[v]){
+        if(dep[top[u]] < dep[top[v]]){
+            swap(u,v);
+        }
+        Update(tid[top[u]],tid[u],C,l,r,rt);
+        u = fa[top[u]];
+    }
+    if(dep[u] > dep[v]){
+        swap(u,v);
+    }
+    Update(tid[u],tid[v],C,l,r,rt);
+}
+
+int solve_query(int L,int R,int l,int r,int rt)
+{
+    //需要比较树链交点处的值是否一样
+    int u = L,v = R,ans = 0;
+    while(top[u] != top[v]){
+        if(dep[top[u]] < dep[top[v]]){
+            swap(u,v);
+        }
+        ans += Query(tid[top[u]],tid[u],l,r,rt);
+        store p1 = check(tid[top[u]],l,r,rt);
+        store p2 = check(tid[fa[top[u]]],l,r,rt);
+        if(p1.l == p2.r) ans--;
+        u = fa[top[u]];
+    }
+    if(dep[u] > dep[v]){
+        swap(u,v);
+    }
+    ans += Query(tid[u],tid[v],l,r,rt);
+    return ans;
+}
+
+char st[10];
+
+int main()
+{
+    int n,m;
+    while(~scanf("%d%d",&n,&m)){
+        init();
+        for(int i = 1; i <= n; ++i){
+            scanf("%d",&data[i]);
+        }
+        int a,b,c;
+        for(int i = 0; i < n-1; ++i){
+            scanf("%d%d",&a,&b);
+            mkEdge(a,b);
+            mkEdge(b,a);
+        }
+
+        dfs1(1,0,1);
+        dfs2(1,1);
+
+        memset(Add,-1,sizeof(Add));
+        Build(1,n,1);
+
+        for(int i = 0; i < m; ++i){
+            scanf(" %s%d%d",st,&a,&b);
+            if(st[0] == 'Q'){
+                printf("%d\n",solve_query(a,b,1,n,1));
+            }else{
+                scanf("%d",&c);
+                solve_update(a,b,c,1,n,1);
+            }
+        }
+    }
+    return 0;
+}
+
+

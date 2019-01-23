@@ -1,0 +1,102 @@
+#include <iostream>
+#include <algorithm>
+#include <cstring>
+#include <cstdio>
+#include <cmath>
+#include <vector>
+#include <set>
+#include <map>
+
+using namespace std;
+
+typedef long long llt;
+
+const int N = 50010;
+const int M = 50010;
+const int INF = 0x3fffffff;
+const int mod = 1e9+7;
+
+struct Node{
+    int l,r,id,block;
+    bool operator < (const Node&a) const{
+        if(a.block == block) return r < a.r;
+        else return block < a.block;
+    }
+}node[N];
+
+llt cnt[N],mole[N],deno[N],data[N];
+llt ans;
+
+void init()
+{
+    ans = 0;
+    memset(cnt,0,sizeof(cnt));
+}
+
+llt cal(llt a)
+{
+    if(a < 2) return 0;
+    else return a*(a-1)/2;
+}
+
+llt gcd(llt a,llt b)
+{
+    if(b == 0) return a;
+    else return gcd(b,a%b);
+}
+
+//莫队算法
+
+//添加一个点
+void Add(int pos)
+{
+    llt a = ++cnt[data[pos]];
+    ans += cal(a)-cal(a-1);
+}
+
+//去除一个点
+void Remove(int pos)
+{
+    llt a = --cnt[data[pos]];
+    ans -= cal(a+1)-cal(a);
+}
+
+void solve(int n)
+{
+    int L,R,cl = 1,cr = 1; Add(1);
+    for(int i = 1; i <= n; ++i){
+        L = node[i].l; R = node[i].r;
+        while(cl < L){ Remove(cl); cl++; }
+        while(cl > L){ cl--; Add(cl); }
+        while(cr < R){ cr++; Add(cr); }
+        while(cr > R){ Remove(cr); cr--; }
+        mole[node[i].id] = ans;
+        deno[node[i].id] = cal(R-L+1);
+    }
+}
+
+int main()
+{
+    int n,m;
+    while(~scanf("%d%d",&n,&m)){
+        init();
+        for(int i = 1; i <= n; ++i) scanf("%lld",&data[i]);
+        int a,b,block = 0;
+        for(int i = 1; i <= m; ++i){
+            scanf("%d%d",&a,&b);
+            node[i].l = a; node[i].r = b; node[i].id = i;
+            block = max(block,b);
+        }
+        for(int i = 1; i <= m; ++i){
+            node[i].block = (int)node[i].l/sqrt(block);
+        }
+        sort(node+1,node+m+1);
+        solve(m);
+        for(int i = 1; i <= m; ++i){
+            llt t = gcd(deno[i],mole[i]);
+            deno[i] /= t; mole[i] /= t;
+            printf("%lld/%lld\n",mole[i],deno[i]);
+        }
+    }
+    return 0;
+}

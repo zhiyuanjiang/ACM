@@ -1,0 +1,3 @@
+1.unique去重函数，返回去重后元素尾地址
+2.next_permutation(vec,vec+n)  对vec元素进行全排列
+3.lgamma(n):求ln((n-1)!)  tgamma(n):求(n-1)!

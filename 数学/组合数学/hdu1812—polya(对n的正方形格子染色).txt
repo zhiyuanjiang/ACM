@@ -1,0 +1,77 @@
+import java.math.*;
+import java.util.*;
+import java.io.*;
+
+public class Main {
+	
+	/*                   n为奇                                 n为偶
+	 * 	    旋转置换: 0       n*n               n*n
+	 *           90      (n*n-1)/4+1       (n*n)/4
+	 *           180     (n*n-1)/2+1       (n*n)/2
+	 *           270     (n*n-1)/4+1       (n*n)/4
+	 *           
+	 *   反射置换: 对边中点反射(2)
+	 *                   (n*n-n)/2+n       (n*n)/2
+	 *           对角反射(2)
+	 *                   (n*n-n)/2+n       (n*n-n)/2+n 
+	 */
+	
+	//c为颜色种数，n为正方形的边长
+	static BigInteger isodd(int c,int n){
+		BigInteger sum = BigInteger.ZERO;
+		BigInteger p = BigInteger.valueOf(c);
+		BigInteger two = BigInteger.valueOf(2);
+		BigInteger re;
+		
+		//旋转置换的轮换数
+		re = p.pow(n*n);
+		sum = sum.add(re);
+		re = two.multiply(p.pow((n*n-1)/4+1));
+		sum = sum.add(re);
+		re = p.pow((n*n-1)/2+1);
+		sum = sum.add(re);
+		
+		//反射置换的轮换数
+		re = two.multiply(p.pow((n*n-n)/2+n));
+		sum = sum.add(re);
+		re = two.multiply(p.pow((n*n-n)/2+n));
+		sum = sum.add(re);
+		
+		return sum.divide(BigInteger.valueOf(8));
+	}
+	
+	static BigInteger iseven(int c,int n){
+		BigInteger sum = BigInteger.ZERO;
+		BigInteger p = BigInteger.valueOf(c);
+		BigInteger two = BigInteger.valueOf(2);
+		BigInteger re;
+		
+		//旋转置换的轮换数
+		re = p.pow(n*n);
+		sum = sum.add(re);
+		re = two.multiply(p.pow((n*n)/4));
+		sum = sum.add(re);
+		re = p.pow((n*n)/2);
+		sum = sum.add(re);
+		
+		//反射置换的轮换数
+		re = two.multiply(p.pow((n*n)/2));
+		sum = sum.add(re);
+		re = two.multiply(p.pow((n*n-n)/2+n));
+		sum = sum.add(re);
+		
+		return sum.divide(BigInteger.valueOf(8));
+	}
+	
+	public static void main(String[]args){
+		Scanner cin = new Scanner(System.in);
+		int n,c;
+		while(cin.hasNext()){
+			n = cin.nextInt();
+			c = cin.nextInt();
+			if(n%2 == 0) System.out.println(iseven(c, n));
+			else System.out.println(isodd(c, n));
+			
+		}
+	}
+}

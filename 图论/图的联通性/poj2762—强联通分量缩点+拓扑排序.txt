@@ -1,0 +1,181 @@
+#include <iostream>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
+#include <algorithm>
+#include <string>
+#include <stack>
+#include <queue>
+#include <set>
+#include <map>
+#include <vector>
+
+using namespace std;
+
+typedef long long ll;
+typedef pair<int,int>PA;
+const int N = 6090;
+const int M = 1090;
+const int INF = 0x3fffffff;
+const double eps = 1e-8;
+const double PI = acos(-1.0);
+
+struct Edge{
+    int node;
+    Edge*next;
+}m_edge[N*2];
+Edge*head[M];
+int low[M],dfn[M],flag[M],Ecnt,dfs_clock;
+int num,tick[M];  //num记录强联通分量的数目，tick标记每个点属于哪个联通分量
+stack<int>st;
+
+void init()
+{
+    Ecnt = 0;
+    fill( head , head+M , (Edge*)0 );
+    //memset( dfn , 0 , sizeof(dfn) );
+    //while( !st.empty() ) st.pop();
+}
+
+void mkEdge( int a , int b )
+{
+    m_edge[Ecnt].node = b;
+    m_edge[Ecnt].next = head[a];
+    head[a] = m_edge+Ecnt++;
+}
+
+//求有向图的强联通分量
+void tarjan( int u )
+{
+    st.push(u);
+    //flag[u] = 1;
+    low[u] = dfn[u] = ++dfs_clock;
+    for( Edge*p = head[u] ; p ; p = p->next ){
+        int v = p->node;
+        if( !dfn[v] ){
+            tarjan( v );
+            low[u] = min( low[u] , low[v] );
+        }else if( !dfn[v] ){
+            low[u] = min( low[u] , dfn[v] );
+        }
+    }
+    if( dfn[u] == low[u] ){
+        num++;  tick[u] = num;
+        while( st.top() != u ){
+            tick[st.top()] = num;
+            st.pop();
+        }
+        st.pop();
+    }
+}
+
+int ret[M][M];
+
+void Build( int m )
+{
+    memset( ret , 0 , sizeof(ret) );
+    int a,b;
+    for( int i = 0 ; i < m ; ++i ){
+        scanf("%d%d",&a,&b);
+        ret[a][b] = 1;
+        mkEdge(a,b);
+    }
+}
+
+int inDeg[M];
+
+bool topoSort()
+{
+    queue<int>node;
+    int cnt = 0;
+    for( int i = 1 ; i <= num ; ++i )
+    if( !inDeg[i] ){
+        cnt++; node.push(i);
+        inDeg[i] = -1;
+    }
+    if( cnt > 1 ) return false;
+
+    while( !node.empty() ){
+        int s = node.front();
+        node.pop();
+        for( Edge*p = head[s] ; p ; p = p->next ){
+            int v = p->node;
+            inDeg[v]--;
+        }
+        cnt = 0;
+        for( int i = 1 ; i <= num ; ++i ){
+            if( !inDeg[i] ){
+                node.push(i);
+                inDeg[i] = -1;
+                cnt++;
+            }
+        }
+        if( cnt > 1 ) return false;
+    }
+    return true;
+}
+
+bool solve( int n , int m )
+{
+    Build(m);
+
+    num = dfs_clock = 0;
+    memset( dfn , 0 , sizeof(dfn) );
+    //memset( flag , 0 , sizeof(flag) );
+    memset( tick , 0 , sizeof(tick) );
+    for( int i = 1 ; i <= n ; ++i ){
+        if( !tick[i] ) tarjan(i);
+    }
+
+    init();
+    memset( inDeg , 0 , sizeof(inDeg) );
+    for( int i = 1 ; i <= n ; ++i ){
+        for( int j = 1 ; j <= n ; ++j ){
+            if( ret[i][j] && tick[i] != tick[j] ){
+                inDeg[tick[j]]++;
+                mkEdge(tick[i],tick[j]);
+            }
+        }
+    }
+
+    if( topoSort() ) return true;
+    else return false;
+}
+
+int main()
+{
+    int T;
+    scanf("%d",&T);
+    while( T-- ){
+        init();
+        while( !st.empty() ) st.pop();
+        int n,m;
+        scanf("%d%d",&n,&m);
+        if( solve(n,m) ) printf("Yes\n");
+        else printf("No\n");
+    }
+    return 0;
+}
+
+/*
+1
+8 11
+1 2
+2 3
+2 5
+2 6
+3 5
+4 3
+5 2
+5 4
+6 7
+6 8
+7 6
+
+6
+4 4
+1 2
+1 3
+2 4
+3 4
+*/

@@ -1,0 +1,75 @@
+#include <iostream>
+#include <cstring>
+#include <cstdio>
+#include <vector>
+
+using namespace std;
+typedef long long ll;
+const int N = 100300;
+const int INF = 0x3f3f3f3f;
+
+int oula[N];
+void getLa( int n )
+{
+    for( int i = 0 ; i < n ; ++i ) oula[i] = i;
+    for( int i = 2 ; i < n ; ++i ){
+        //iÎªÖÊÊý
+        if( oula[i] == i ){
+            for( int j = 1 ; j*i < n ; ++j ){
+                oula[j*i] -= oula[j*i]/i;
+            }
+        }
+    }
+}
+
+int solve(int n,int r){
+    vector<int>p;
+    for(int i=2; i*i<=n; ++i)
+       if(n%i == 0){
+           p.push_back (i);
+           while(n%i == 0)
+                n /= i;
+       }
+    if(n > 1)
+        p.push_back(n);
+
+    int sz = p.size();
+    int sum = 0;
+    for(int i=1; i<(1<<sz); ++i){
+       int mult = 1,bits = 0;
+       for (int j=0; j<sz; ++j)
+           if (i&(1<<j)) {
+               ++bits;
+               mult *= (ll)p[j];
+           }
+
+       int cur = r/mult;
+       if (bits % 2 == 1)  sum += cur;
+       else  sum -= cur;
+    }
+
+    return r - sum;
+}
+
+
+int main()
+{
+    getLa(N);
+    int T,cas = 0;
+    scanf("%d",&T);
+    while( T-- ){
+        int a,b,c,d,k;
+        scanf("%d%d%d%d%d",&a,&b,&c,&d,&k);
+        if(k == 0) {printf("Case %d: %d\n",++cas,0);continue;}
+        int t1 = b/k;
+        int t2 = d/k;
+        if( t1 > t2 ) swap(t1,t2);
+        ll sum = 0;
+        for( int i = 1 ; i <= t1 ; ++i ) sum += (ll)oula[i];
+
+        for( int i = t1+1 ; i <= t2 ; ++i ) sum += (ll)solve(i,t1);
+
+        printf("Case %d: %lld\n",++cas,sum);
+    }
+    return 0;
+}

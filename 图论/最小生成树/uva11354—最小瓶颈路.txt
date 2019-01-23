@@ -1,0 +1,185 @@
+#include <iostream>
+#include <stack>
+#include <vector>
+#include <cstdio>
+#include <cstring>
+#include <algorithm>
+using namespace std;
+const int INF = 0x3fffffff;
+const int N = 50030;
+const int M = 100300;
+
+//最小瓶颈路:给定加权无向图的两个节点u,v，求从u到v的一条路径,使得路径上的最长边尽量短
+
+struct Edge{
+    int u,v,len;
+    bool operator < (const Edge&a) const{
+        return a.len > len;
+    }
+}E[M];
+int Ecnt,parent[N];
+
+struct NEdge{
+    int node,len;
+    NEdge*next;
+}m_edge[N*2];
+int NEcnt;
+NEdge*head[N];
+
+void mkEdge(int a,int b,int c)
+{
+    m_edge[NEcnt].node = b;
+    m_edge[NEcnt].len = c;
+    m_edge[NEcnt].next = head[a];
+    head[a] = m_edge+NEcnt++;
+}
+
+void init()
+{
+    Ecnt = NEcnt = 0;
+    fill( head , head+N , (NEdge*)0 );
+    for( int i = 0 ; i < N ; ++i ) parent[i] = i;
+}
+
+int find(int a)
+{
+    while(a != parent[a]){
+        parent[a] = parent[parent[a]];
+        a = parent[a];
+    }
+    return a;
+}
+
+void merge(int a,int b)
+{
+    int i = find(a);
+    int j = find(b);
+    if( i != j ) parent[i] = j;
+}
+
+int kruskal( int n , int m )
+{
+    sort(E,E+m);
+    int len=0,Count=0;
+
+    for( int i = 0 ; i < m ; ++i ){
+        int u = E[i].u;
+        int v = E[i].v;
+        int L = E[i].len;
+        if( find(u) != find(v) ){
+            len += L;
+            Count++;
+            mkEdge(u,v,L);
+            mkEdge(v,u,L);
+            merge(u,v);
+        }
+        if( Count == n-1 ) break;
+    }
+
+    return len;
+}
+
+//fa[i]:节点i的父节点编号
+//cost[i]:节点i与父节点间的边权
+//L[i]:表示节点i的深度
+int fa[N],cost[N],L[N];
+
+void dfs( int u , int father )
+{
+    for( NEdge*p = head[u] ; p ; p = p->next ){
+        int v = p->node;
+        if( v != father ){
+            fa[v] = u;
+            cost[v] = p->len;
+            L[v] = L[u]+1;
+            dfs(v,u);
+        }
+    }
+}
+
+//无根树转为有根树
+void toChangeRoot( int root )
+{
+    fa[root] = root;
+    cost[root] = L[root] = 0;
+    dfs(root,-1);
+}
+
+//anc[i][j]:节点i的第2^j级祖先编号
+//maxcost[i][j]:节点i和它的2^j级祖先间路径上的最大权值
+int anc[N][30],maxcost[N][30];
+
+//LCA倍增预处理
+void preprocess( int n )
+{
+    for( int i = 0 ; i < n ; ++i ){
+        anc[i][0] = fa[i]; maxcost[i][0] = cost[i];
+        for( int j = 1 ; (1<<j) < n ; ++j ) anc[i][j] = -1;
+    }
+
+    for( int j = 1 ; (1<<j) < n ; ++j )
+    for( int i = 0 ; i < n ; ++i ){
+        int a = anc[i][j-1];
+        anc[i][j] = anc[a][j-1];
+        maxcost[i][j] = max(maxcost[i][j-1],maxcost[a][j-1]);
+    }
+}
+
+//查询
+int query(int p,int q)
+{
+    int tmp,log;
+    if(L[p] < L[q]) swap(p,q);
+    for( log = 1 ; (1<<log) <= L[p] ; log++ ); log--;
+
+    int ans = -INF;
+    for( int i = log ; i >= 0 ; --i )
+    if(L[p]-(1<<i) >= L[q]){
+        ans = max(ans,maxcost[p][i]);
+        p = anc[p][i];
+    }
+
+    if(p == q) return ans;
+
+    for( int i = log ; i >= 0 ; --i ){
+        if(anc[p][i] != -1 && anc[p][i] != anc[q][i]){
+            ans = max(ans,maxcost[p][i]); p = anc[p][i];
+            ans = max(ans,maxcost[q][i]); q = anc[q][i];
+        }
+    }
+
+    ans = max(ans,cost[p]);
+    ans = max(ans,cost[q]);
+    return ans;
+}
+
+
+int main()
+{
+    int n,m,cas = 1;
+    while( ~scanf("%d%d",&n,&m) ){
+        int a,b,c;
+        init();
+        for( int i = 0 ; i < m ; ++i ){
+            scanf("%d%d%d",&a,&b,&c);
+            a--; b--;
+            E[Ecnt].u = a;
+            E[Ecnt].v = b;
+            E[Ecnt++].len = c;
+        }
+
+        kruskal(n,m);
+        toChangeRoot(0);
+        preprocess(n);
+
+        scanf("%d",&a);
+        if( cas != 1 ) printf("\n");
+        while(a--){
+            scanf("%d%d",&b,&c);
+            b--; c--;
+            printf("%d\n",query(b,c));
+        }
+        cas++;
+    }
+    return 0;
+}

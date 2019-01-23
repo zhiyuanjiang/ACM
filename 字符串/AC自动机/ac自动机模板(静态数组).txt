@@ -1,0 +1,145 @@
+#include <algorithm>
+#include <cstring>
+#include <cstdio>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <queue>
+
+using namespace std;
+
+//hdu2896
+//特别容易mle
+//记得去重
+
+#define STCHAR 'a'
+
+const int N = 10010;
+const int maxn = 128;
+
+struct Trie
+{
+	int num,rec;
+	int fail,next[maxn];
+	Trie(){
+        num = rec = 0;
+        fail = -1;
+        memset(next,-1,sizeof(next));
+	}
+}trie[N*6];
+
+int index,root;
+
+void init()
+{
+    index = 0;
+    root = index++;
+}
+
+//插入一个字符串
+void trie_insert(char *word,int rec)
+{
+    int temp = root;
+    int len = strlen(word);
+    for(int i = 0; i < len; ++i){
+        int p = word[i];
+        if(trie[temp].next[p] == -1){
+            trie[temp].next[p] = index++;
+        }
+        temp = trie[temp].next[p];
+    }
+    trie[temp].num++;
+    trie[temp].rec = rec;
+}
+
+//建立失败指针
+void build_fail_pointer()
+{
+    int p = root;
+    queue<int>q;
+    q.push(p);
+    while(!q.empty()){
+        p = q.front();
+        q.pop();
+        for(int i = 0; i < maxn; ++i){
+            if(trie[p].next[i] != -1){  //第i个孩子存在
+                if(p == root){
+                    trie[trie[p].next[i]].fail = root;
+                }else{
+                    int fail = trie[p].fail;
+                    while(fail != -1){
+                        if(trie[fail].next[i] != -1){
+                            trie[trie[p].next[i]].fail = trie[fail].next[i];
+                            break;
+                        }
+                        fail = trie[fail].fail;
+                    }
+                    if(fail == -1){
+                        trie[trie[p].next[i]].fail = root;
+                    }
+                }
+                q.push(trie[p].next[i]);
+            }
+        }
+    }
+}
+
+int cnt;
+vector<int>vec;
+
+void ac_automation(char *ch)
+{
+    int p = root;
+    int len = strlen(ch);
+    for(int i = 0; i < len; ++i){
+        int x = ch[i];
+        while(trie[p].next[x] == -1 && p != root) p = trie[p].fail;
+        p = trie[p].next[x];
+        if(p == -1) p = root;
+        int temp = p;
+        while(temp != root){
+            if(trie[temp].num >= 0){
+                //cnt += trie[temp].num;
+                //trie[temp].num = -1;
+                if(trie[temp].rec != 0){
+                    vec.push_back(trie[temp].rec);
+                }
+            }else break;
+            temp = trie[temp].fail;
+        }
+    }
+}
+
+char data[N];
+
+int main()
+{
+    init();
+    int n,m,num = 0;
+    scanf("%d",&n);
+    for(int i = 1; i <= n; ++i){
+        scanf(" %s",&data);
+        trie_insert(data,i);
+    }
+    build_fail_pointer();
+    scanf("%d",&m);
+    for(int i = 1; i <= m ; ++i){
+        scanf(" %s",&data);
+        vec.clear();
+        ac_automation(data);
+        if(vec.size() != 0){
+            ++num;
+            printf("web %d:",i);
+            sort(vec.begin(),vec.end());
+            vector<int>::iterator iter = unique(vec.begin(),vec.end());
+            vec.erase(iter,vec.end());
+            for(int i = 0; i < vec.size(); ++i)
+                printf(" %d",vec[i]);
+            printf("\n");
+        }
+    }
+    if(num > 0)
+        printf("total: %d\n",num);
+    return 0;
+}
+

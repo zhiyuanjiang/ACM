@@ -1,0 +1,151 @@
+#include <iostream>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
+#include <algorithm>
+#include <string>
+#include <stack>
+#include <queue>
+#include <set>
+#include <map>
+#include <vector>
+
+using namespace std;
+
+typedef long long ll;
+typedef pair<int,int>PA;
+const int N = 100900;
+const int M = 100900;
+const int INF = 0x3fffffff;
+const int mod = 1e9+7;
+const double eps = 1e-8;
+const double PI = acos(-1.0);
+
+//当点双联通分量只有一个割点时，才需要打井，此时任选一个非割点打井就行
+//当整个图没有割点，此时只要打两口井，方案数为v*(v-1)/2
+
+struct Edge{
+    int node;
+    Edge*next;
+}m_edge[N*2];
+Edge*head[M];
+int low[M],dfn[M],bccno[M],Ecnt,dfs_clock;
+int iscut[M],bcc_cnt;
+//bcc_cnt统计联通分量的数目
+stack<PA>st;
+vector<int>bcc[M];
+
+void init()
+{
+    Ecnt = bcc_cnt = dfs_clock = 0;
+    fill( bccno , bccno+M , 0 );
+    fill( head , head+M , (Edge*)0 );
+    fill( dfn , dfn+M , 0 );
+    fill( iscut , iscut+M , 0 );
+}
+
+void mkEdge( int a , int b )
+{
+    m_edge[Ecnt].node = b;
+    m_edge[Ecnt].next = head[a];
+    head[a] = m_edge+Ecnt++;
+}
+
+void tarjan( int u , int father )
+{
+    low[u] = dfn[u] = ++dfs_clock;
+    int child = 0;
+
+    for( Edge*p = head[u] ; p ; p = p->next ){
+        int v = p->node;
+        if( !dfn[v] ){
+            child++;
+            st.push(PA(u,v));
+            tarjan(v,u);
+            low[u] = min(low[u],low[v]);
+            //求点的双联通分量
+            if( low[v] >= dfn[u] ){
+                bcc_cnt++;
+                bcc[bcc_cnt].clear();
+                iscut[u] = 1;
+                while( !st.empty() ){
+                    PA t = st.top();
+                    st.pop();
+
+                    if( bccno[t.first] != bcc_cnt ){
+                        bcc[bcc_cnt].push_back(t.first);
+                        bccno[t.first] = bcc_cnt;
+                    }
+                    if( bccno[t.second] != bcc_cnt ){
+                        bcc[bcc_cnt].push_back(t.second);
+                        bccno[t.second] = bcc_cnt;
+                    }
+                    if(t.first == u && t.second == v) break;
+                }
+            }
+        }else if( v != father && dfn[v] < dfn[u] ){
+            low[u] = min(low[u],dfn[v]);
+            st.push(PA(u,v));
+        }
+    }
+
+    if( father < 0 && child == 1 ) iscut[u] = 0;
+}
+
+void Build( int n )
+{
+    int a,b;
+    for( int i = 0 ; i < n ; ++i ){
+        scanf("%d%d",&a,&b);
+        mkEdge(a,b);
+        mkEdge(b,a);
+    }
+}
+
+int cas = 1;
+
+int solve()
+{
+
+    tarjan( 1 , -1 );
+
+    ll ans1 = 0,ans2 = 1;
+    for( int i= 1 ; i <= bcc_cnt ; ++i ){
+        int cnt = 0;
+        for( int j = 0 ; j < bcc[i].size() ; ++j ){
+            if( iscut[bcc[i][j]] ) cnt++;
+        }
+        if( cnt == 1 ){
+            ans1++;
+            ans2 *= (ll)(bcc[i].size()-1);
+        }
+    }
+    if( bcc_cnt == 1 ){
+        ans1 = 2;
+        ans2 = (ll)(bcc[1].size()-1)*bcc[1].size()/2;
+    }
+    //wa得不要不要，结果是输出格式错了，以后一定要注意
+    printf("Case %d: %lld %lld\n",cas++,ans1,ans2);
+}
+
+int main()
+{
+     int n;
+     while( ~scanf("%d",&n)&&n ){
+        init();
+        Build(n);
+        solve();
+     }
+     return 0;
+}
+
+/*
+6
+1 2
+2 3
+1 3
+3 4
+3 5
+4 5
+
+*/

@@ -1,0 +1,6 @@
+//离散化
+    //对于数据少，范围大，且仅需要数据相对大小的关系
+    //A[n],B[n]:B是A的副本
+    sort(A,A+n);
+    int sz = unique(A,A+n)-A;
+    int a = lower_bound(A,A+sz,B[i])-A; //a为B[i]的映射(范围为0~sz-1),lg(n)

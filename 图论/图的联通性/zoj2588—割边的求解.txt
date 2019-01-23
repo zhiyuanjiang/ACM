@@ -1,0 +1,132 @@
+#include <iostream>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
+#include <algorithm>
+#include <string>
+#include <stack>
+#include <queue>
+#include <set>
+#include <map>
+
+using namespace std;
+
+typedef long long ll;
+typedef pair<int,int>PA;
+const int N = 100900;
+const int M = 10900;
+const int INF = 0x3fffffff;
+const double eps = 1e-8;
+const double PI = acos(-1.0);
+
+//dfn[u]是深度优先搜索树节点u的优先级
+//low[u]是从u或者u的子孙出发通过回边可以到达的最低深度优先数
+//low[u] = min{ dfn[u] ,
+//              min{ low[w] | w是u的一个子女 } ,
+//              min{ dfn[v] | v与u邻接，且(u,v)是一条回边} }
+
+/*
+    割边的判断:
+    无向图中的一条边(u,v)是割边，当且仅当(u,v)是生成树种的边，且满足dfn[u]<low[v]
+
+    割边的求解与割点的求解类似
+*/
+
+//向下搜索时，如果顶点v是u的相邻顶点，若v还未被访问，则v是u的儿子节点
+//若v被访问了，则v是u的祖先节点，且(u,v)是一条回边
+
+struct Edge{
+    int node;
+    Edge*next;
+}m_edge[N*2];
+Edge*head[M];
+int low[M],dfn[M],Flag[M],Ecnt,cnt;
+vector<PA>st;
+
+void init()
+{
+    Ecnt = cnt = 0;
+    fill( Flag , Flag+M , 0 );
+    fill( head , head+M , (Edge*)0 );
+}
+
+void mkEdge( int a , int b )
+{
+    m_edge[Ecnt].node = b;
+    m_edge[Ecnt].next = head[a];
+    head[a] = m_edge+Ecnt++;
+}
+
+void tarjan( int u , int father )
+{
+    Flag[u] = 1;
+    low[u] = dfn[u] = cnt++;
+    for( Edge*p = head[u] ; p ; p = p->next ){
+        int v = p->node;
+        if( !Flag[v] ){
+            tarjan(v,u);
+            low[u] = min(low[u],low[v]);
+            //判断(u,v)是否是割边
+            if( low[v] > dfn[u] ){
+                st.push_back(PA(u,v));
+            }
+        }
+        //v是u的祖先，且(u,v)是一条回边
+        if( v != father && Flag[v] )
+            low[u] = min(low[u],dfn[v]);
+    }
+}
+
+map<PA,int>mp;
+
+void Build( int m )
+{
+    int a,b,num = 0;
+    for( int i = 0 ; i < m ; ++i ){
+        scanf("%d%d",&a,&b);
+        if( mp[PA(a,b)] != 0 ){
+            //将重边标记为无穷大，重边不可能是割边
+            mp[PA(a,b)] = INF;
+            mp[PA(b,a)] = INF;
+            num += 2;
+        }else{
+            mp[PA(a,b)] = (++num);
+            mp[PA(b,a)] = (++num);
+            mkEdge(a,b);
+            mkEdge(b,a);
+        }
+    }
+}
+
+int main()
+{
+    int T,cas = 0;
+    scanf("%d",&T);
+    while( T-- ){
+        init();
+        if( !mp.empty() ) mp.clear();
+        while( !st.empty() ) st.pop_back();
+        int n,m;
+        scanf("%d%d",&n,&m);
+        Build(m);
+        tarjan(1,-1);
+        int rec[N],Count = 0;
+        for( int i = 0 ; i < st.size() ; ++i ){
+            int s = mp[st[i]];
+            //重边不可能是割边
+            if( s != INF ) rec[Count++] = (s+1)/2;
+        }
+        if( cas != 0 ) printf("\n");
+        printf("%d\n",Count);
+        if( Count > 0 ){
+            sort( rec , rec+Count );
+            printf("%d",rec[0]);
+            for( int i = 1 ; i < Count ; ++i ){
+                printf(" %d",rec[i]);
+            }
+            printf("\n");
+        }
+        ++cas;
+    }
+    return 0;
+}

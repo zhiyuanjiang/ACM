@@ -1,0 +1,65 @@
+#include <iostream>
+#include <cmath>
+#include <algorithm>
+
+using namespace std;
+
+//用过原点的直线将点集划分成两个部分，答案为两个部分权值和的乘积最大值
+//对点集按角度（或极角）拍个序，然后逆时针扫一遍就行了
+
+//double相乘有精度问题，用long long就过了，wa到心态爆炸
+
+const int N = 50100;
+const double eps = 1e-9;
+const double PI = acos(-1.0);
+
+struct Point{
+    double x,y,v,arctan;
+    bool operator < (const Point&a)const{
+        return a.arctan > arctan;
+    }
+}point[N];
+
+int main()
+{
+//    freopen("1008.in","r",stdin);
+//    freopen("yuan.txt","w",stdout);
+    int T;
+    scanf("%d",&T);
+    while(T--){
+        int n;
+        scanf("%d",&n);
+        double _x,_y,_v;
+        for( int i = 0 ; i < n ; ++i ){
+            scanf("%lf%lf%lf",&_x,&_y,&_v);
+            point[i].x = _x;
+            point[i].y = _y;
+            point[i].v = _v;
+            if(_x == 0) point[i].arctan = PI/2.0;
+            else point[i].arctan = atan(_y/_x);
+        }
+
+        sort(point,point+n);
+
+        long long ls,rs;
+        ls = rs = 0.0;
+        for( int i = 0 ; i < n ; ++i ){
+            if(point[i].x>=0) rs += point[i].v;
+            else ls += point[i].v;
+        }
+
+        long long ans = ls*rs;
+        for( int i = 0 ; i < n ; ++i ){
+            if(point[i].x < 0){
+                ls -= point[i].v;
+                rs += point[i].v;
+            }else{
+                ls += point[i].v;
+                rs -= point[i].v;
+            }
+            ans = max(ans,ls*rs);
+        }
+        printf("%lld\n",ans);
+    }
+    return 0;
+}

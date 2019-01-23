@@ -1,0 +1,90 @@
+#include <iostream>
+#include <cstring>
+#include <string>
+#include <algorithm>
+#include <cstdio>
+
+using namespace std;
+typedef long long ll;
+
+const int N = 10000;
+const int mod = 9901;
+
+//get inverse
+//(a/b)%mod ==> (a%(b*mod))/b 
+
+int isNotPrime[N],isPrime[N],num_prime;
+
+void getPrime()
+{
+    memset(isNotPrime,0,sizeof(isNotPrime));
+    num_prime = 0;
+    for( int i = 2 ; i < N ; ++i ){
+        if(!isNotPrime[i]) isPrime[num_prime++] = i;
+        for( int j = 0 ; j < num_prime && i*isPrime[j] < N ; ++j ){
+            isNotPrime[i*isPrime[j]] = 1;
+            if(i%isPrime[j] == 0) break;
+        }
+    }
+}
+
+ll fast_mult(ll x,ll n,ll mod)
+{
+    ll ans = 0;
+    while(n){
+        if(n&1) ans = (ans+x)%mod;
+        x = (x+x)%mod;
+        n >>= 1;
+    }
+    return ans;
+}
+
+ll fast_mi(ll x,ll n,ll mod)
+{
+    ll ans = 1;
+    while(n){
+        if(n&1) ans = fast_mult(ans,x,mod);  //Multiplication may overflow int64
+        x = fast_mult(x,x,mod);
+        n >>= 1;
+    }
+    return ans;
+}
+
+
+ll solve(ll a,ll b)
+{
+    ll cnt,ans = 1;
+    for( int i = 0 ; isPrime[i]*isPrime[i] <= a && i < num_prime ; ++i ){
+        if(a%isPrime[i] == 0){
+            cnt = 0;
+            while(a%isPrime[i] == 0){
+                cnt++;
+                a /= isPrime[i];
+            }
+            ll M = (ll)(isPrime[i]-1)*mod;
+            ans *= (fast_mi(isPrime[i],cnt*b+1,M)-1+M)/(isPrime[i]-1);
+            ans %= mod;
+        }
+    }
+    if(a > 1){
+        ll M = (a-1)*mod;
+        ans *= (fast_mi(a,b+1,M)-1+M)/(a-1);
+        ans %= mod;
+    }
+
+    return ans;
+}
+
+
+
+int main()
+{
+    getPrime();
+    ll A,B;
+
+    while(~scanf("%lld%lld",&A,&B)){
+        if(B == 0) {printf("%d\n",1); continue;}
+        printf("%lld\n",solve(A,B));
+    }
+    return 0;
+}

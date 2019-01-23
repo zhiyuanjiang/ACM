@@ -1,0 +1,59 @@
+#include <cstdio>
+#include <queue>
+
+using namespace std;
+
+const int N = 1000;
+const int INF = 0x3fffffff;
+
+struct Edge{
+    int u,v,w;
+}e[N*N];
+int dist[N],pre[N],Ecnt;
+
+//Bellman_Ford算法，可以处理负权边，但不能处理负环，0(EV)
+//松弛n-1次后，若还能松弛，则存在负权边。
+
+void mkEdge(int a, int b, int c)
+{
+    e[Ecnt].u = a;
+    e[Ecnt].v = b;
+    e[Ecnt].w = c;
+    ++Ecnt;
+}
+
+bool Bellman_Ford(int s, int n)
+{
+    fill(dist, dist+N, INF);
+    dist[s] = 0;
+
+    //松弛n-1次
+    for(int i = 0; i < n-1; ++i){
+        for(int j = 0; j < Ecnt; ++j){
+            int u = e[j].u;
+            int v = e[j].v;
+            int w = e[j].w;
+            if(dist[v] > dist[u]+w){
+                dist[v] = dist[u]+w;
+                //记录前驱节点
+                pre[v] = u;
+            }
+        }
+    }
+
+    //再松弛一次，若能产生更小的值，则存在负环
+    for(int j = 0; j < Ecnt; ++j){
+        int u = e[j].u;
+        int v = e[j].v;
+        int w = e[j].w;
+        if(dist[v] > dist[u]+w) return false;
+    }
+
+    return true;
+}
+
+int main()
+{
+
+    return 0;
+}

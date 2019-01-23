@@ -1,0 +1,49 @@
+#include <iostream>
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
+#include <string>
+#include <map>
+#include <vector>
+#include <set>
+#include <queue>
+
+using namespace std;
+
+const int N = 50010;
+
+int pre[N],in[N],flag = 0;
+
+void postOrder(int pre[],int in[],int n)
+{
+    int tick = -1;
+    for(int i = 0; i < n; ++i){
+        if(pre[0] == in[i]){
+            tick = i; break;
+        }
+    }
+
+    if(tick){
+        postOrder(pre+1,in,tick);
+    }
+
+    if(n-tick-1){
+        postOrder(pre+tick+1,in+tick+1,n-tick-1);
+    }
+
+    cout << pre[0] << endl;
+}
+
+int main()
+{
+    int n;
+    cin >> n;
+    for(int i = 0; i < n; ++i)
+        cin >> pre[i];
+    for(int i = 0; i < n; ++i)
+        cin >> in[i];
+
+    postOrder(pre,in,n);
+    return 0;
+}

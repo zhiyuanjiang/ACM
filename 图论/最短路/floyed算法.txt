@@ -1,0 +1,31 @@
+#include <cstdio>
+#include <queue>
+
+using namespace std;
+
+const int N = 1000;
+const int M = 1000;
+const int INF = 0x3ffffff;
+
+//floyed算法，求任意两点间的最短距离，0(V^3)
+
+int dist[N][N],graph[N][N];
+
+void floyed( int n )
+{
+    //dist[i][i]初始化为0,dist[i][j]初始化为INF
+
+    for( int i = 0 ; i < n ; ++i ){
+        for( int j = 0 ; j < n ; ++j ){
+            for( int k = 0 ; k < n ; ++k )
+                //注意INF的取值，避免过大越界，过小求不出dist
+                dist[i][j] = min(dist[i][j],dist[i][k]+dist[k][j]);
+        }
+    }
+}
+
+int main()
+{
+
+    return 0;
+}

@@ -1,0 +1,73 @@
+#include <iostream>
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+
+using namespace std;
+
+/*
+hdu1394 求逆序对
+依次遍历A[i],只要知道前面有多少个数大于A[i],就知道前面的数相对于A[i]构成多少个逆序对m。
+对于前面每个数都加上1,m = i-sum(A[i])。
+而对于将序列第一个数放到最后一个,这样增加n-A[i]个逆序对,减少A[i]-1个逆序对。
+*/
+
+#define lowbit(x) (x&-x)
+
+const int maxn = 1000010;
+
+int C[maxn],A[maxn];
+
+void init(int n)
+{
+    memset(C,0,sizeof(C));
+//    for(int i = 1; i <= n; ++i){
+//        for(int j = i-lowbit(i)+1; j <= i; ++j){
+//            C[i] += A[j];
+//        }
+//    }
+}
+
+//sum[A1,Ax]
+int sum(int x)
+{
+    int ret = 0;
+    while(x){
+        ret += C[x];
+        x -= lowbit(x);
+    }
+    return ret;
+}
+
+//A[x] += d
+void add(int x,int d,int n)
+{
+    while(x <= n){
+        C[x] += d;
+        x += lowbit(x);
+    }
+}
+
+int main()
+{
+    int n;
+    while(~scanf("%d",&n)){
+        init(n);
+        int temp = 0;
+        for(int i = 1; i <= n; ++i){
+            scanf("%d",&A[i]);
+            A[i]++;
+            add(A[i],1,n);
+            temp += i-sum(A[i]);
+        }
+        int ans = temp;
+        for(int i = 1; i <= n; ++i){
+            temp = temp+(n-A[i])-(A[i]-1);
+            ans = min(ans,temp);
+        }
+        printf("%d\n",ans);
+    }
+    return 0;
+}
+
+

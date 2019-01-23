@@ -1,0 +1,60 @@
+#include <iostream>
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+
+using namespace std;
+
+/*
+    堆排序:nlog(n)
+    1.重复建堆   logn
+    2.输出堆顶元素
+
+    大根堆：从大到小排序
+*/
+
+const int N = 110;
+const int INF = 0x3ffffff;
+
+int data[N];
+
+//大根堆,s是起点,n是长度
+void HeapAdjust(int data[],int s,int n)
+{
+    //总是从1开始
+    int re = data[s];
+    for(int i = 2*s; i <= n; i = 2*i){
+        if(i+1 <= n && data[i+1] > data[i]) i++;   //找到大的结点
+        if(re >= data[i]) break;               //若没有破坏堆的结构，则直接跳出
+        data[s] = data[i];
+        s = i;
+    }
+    data[s] = re;
+}
+
+void HeapSort(int data[],int n)
+{
+    //建立大根堆
+    for(int i = n/2; i > 0; --i)
+        HeapAdjust(data,i,n);  
+
+    for(int i = 1; i <= n; ++i) cout << data[i] << " ";
+    cout << endl;
+
+    for(int i = n; i > 1; --i){
+        swap(data[1],data[i]);
+        HeapAdjust(data,1,i-1);
+    }
+
+    for(int i = 1; i <= n; ++i){
+        cout << data[i] << endl;
+    }
+}
+
+int main()
+{
+    int data[N];
+    for(int i = 1; i <= 5; ++i) data[i] = i;
+    HeapSort(data,5);
+    return 0;
+}

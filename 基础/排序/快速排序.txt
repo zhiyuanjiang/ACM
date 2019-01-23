@@ -1,0 +1,48 @@
+#include <iostream>
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+#include <ctime>
+
+using namespace std;
+
+/*
+    快速排序：平均时间nlogn,最坏退化到n^2
+*/
+
+const int N = 110;
+const int INF = 0x3ffffff;
+
+int a[N];
+
+void QuickSort(int l,int r)
+{
+    if(l > r) return;
+
+    int temp = a[l];
+    int i = l,j = r;
+    while(i != j){
+        //从右边找比temp小的,一定要先从右边找起,因为我们选的基准数是最左边的数
+        while(a[j] >= temp && i < j) j--;
+        //从左边找比temp大的
+        while(a[i] <= temp && i < j) i++;
+
+        if(i < j)
+            swap(a[i],a[j]);
+    }
+
+    swap(a[l],a[i]);
+
+    QuickSort(l,i-1);
+    QuickSort(i+1,r);
+}
+
+int main()
+{
+    srand(time(NULL));
+    for(int i = 0; i < 10; ++i) a[i] = rand()%100;
+    QuickSort(0,9);
+    for(int i = 0; i < 10; ++i)
+        cout << a[i] << endl;
+    return 0;
+}

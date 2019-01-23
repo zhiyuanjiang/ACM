@@ -1,0 +1,64 @@
+#include <cstdio>
+#include <algorithm>
+using namespace std;
+
+//储存各种棋盘状态的SG值
+int SG[(1<<20)+5];
+
+void initSG(){
+    fill(SG,SG+(1<<20),-1);
+    int t = 0;
+    for(int i=1;i<(1<<20);i=(i<<1)|1){
+        SG[i] = 0;    //棋子都移动到棋盘最右边状态的SG值为0
+    }
+}
+
+int move(int oldStatus,int idx){
+    int oldIdx = idx;
+    while( idx > 0 && 0 != ( oldStatus & ( 1<<(idx-1) ) ) ) --idx;
+    if ( 0 == idx ) return -1;
+    return oldStatus ^ (1<<oldIdx) ^ (1<<(idx-1));
+}   //将某一个棋子向右移动一步（当右边无棋时），否则跳到该棋的相邻右端
+
+int sg(int status){
+    if ( -1 != SG[status] ) return SG[status];   //记忆化搜索
+
+    bool flag[20] = {false};
+    for(int i=0,t=1;i<20;++i,t=t<<1){
+        if ( 0 == ( t & status ) ) continue;     //寻找可移动棋子
+
+        int newStatus = move(status,i);          //原状态的后继
+        if ( -1 == newStatus ) continue;
+
+        flag[sg(newStatus)] = true;              //记录各后继的值
+    }
+    for(int i=0;i<20;++i) if (!flag[i]) return SG[status] = i;  //记录已计算状态的SG值 
+}       //利用mex函数计算status状态下的SG值
+
+int main()
+{
+    initSG();
+
+    int t;
+    scanf("%d",&t);
+    while(t--){
+        int n;
+        scanf("%d",&n);
+        int ret = 0;
+        while(n--){
+            int m;
+            scanf("%d",&m);
+            int pos = 0;
+            while(m--){
+                int p;
+                scanf("%d",&p);
+                pos = pos | ( 1 << (20-p) );
+            }    //记录每个棋盘状态
+
+            if ( SG[pos] != -1 ) ret = ret ^ SG[pos];  
+            else ret = ret ^ sg(pos);  //对各个棋盘的SG值进行异或操作
+        }
+        printf(ret?"YES\n":"NO\n");
+    }
+    return 0;
+}

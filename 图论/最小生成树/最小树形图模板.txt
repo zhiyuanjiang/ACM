@@ -1,0 +1,111 @@
+#include <iostream>
+#include <stack>
+#include <vector>
+#include <cstdio>
+#include <cstring>
+#include <algorithm>
+using namespace std;
+const int INF = 0x3fffffff;
+const int N = 50030;
+const int M = 100300;
+typedef int MyType;
+
+/*
+    最小树形图:类似树的有向图
+    1.恰好有一个入度为0的点，为根节点
+    2.其他节点的入度均为1
+    3.可以从根节点到达所有其他接点
+
+    求解:朱刘算法
+    1.求最短弧集合E0(除根节点外所有点的入边边权最小的边集),若某个点的入边不存在,则最小树形图不存在
+    2.找E0中的环,缩点。若E0中不存在环,跳到步骤4
+    3.重新建图,跳到步骤1
+    4.将缩点展开成环,去掉环中某条边(表达能力不行哦),得到最小树形图
+
+*/
+
+//求最小树形图的权,不需要将缩点展开
+
+struct Edge//边的权和顶点
+{
+    int u, v;
+    MyType w;
+}edge[N];
+int pre[N],id[N],vis[N];
+MyType in[N];//存最小入边权,pre[v]为该边的起点
+
+int Directed_MST(int root,int V,int E)
+{
+    MyType ret = 0;//存最小树形图总权值
+    while(true)
+    {
+        int i;
+        //1.找每个节点的最小入边,求最短弧集合E0
+        for( i = 0; i < V; i++)
+            in[i] = INF;//初始化为无穷大
+        for( i = 0; i < E; i++)//遍历每条边
+        {
+            int u = edge[i].u;
+            int v = edge[i].v;
+            if(edge[i].w < in[v] && u != v)//说明顶点v有条权值较小的入边  记录之
+            {
+                pre[v] = u;//节点u指向v
+                in[v] = edge[i].w;//最小入边
+            }
+        }
+        for( i = 0; i < V; i++)//判断是否存在最小树形图
+        {
+            if(i == root)
+                continue;
+            if(in[i] == INF)
+                return -1;//除了根以外有点没有入边,则根无法到达它  说明它是独立的点 一定不能构成树形图
+        }
+        //2.找环
+        int cnt = 0;//记录环数
+        memset(id, -1, sizeof(id));
+        memset(vis, -1, sizeof(vis));
+        in[root] = 0;
+        for( i = 0; i < V; i++) //标记每个环
+        {
+            ret += in[i];//记录权值
+            int v = i;
+            //向上搜索看是否构成环
+            while(vis[v] != i && id[v] == -1 && v != root)
+            {
+                vis[v] = i;
+                v = pre[v];
+            }
+            //向上搜索找到根节点，肯定不能构成环(根节点入度为0)
+            if(v != root && id[v] == -1)
+            {
+                for(int u = pre[v]; u != v; u = pre[u])
+                    id[u] = cnt;//标记节点u为第几个环
+                id[v] = cnt++;
+            }
+        }
+        if(cnt == 0)
+            break; //无环   则break
+        for( i = 0; i < V; i++)
+            if(id[i] == -1)
+                id[i] = cnt++;
+            //3.建立新图   缩点,重新标记
+            for( i = 0; i < E; i++)
+            {
+                int u = edge[i].u;
+                int v = edge[i].v;
+                edge[i].u = id[u];
+                edge[i].v = id[v];
+                if(id[u] != id[v])
+                    edge[i].w -= in[v];
+            }
+            V = cnt;
+            root = id[root];
+    }
+    return ret;
+}
+
+int main()
+{
+
+    return 0;
+}

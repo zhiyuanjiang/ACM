@@ -1,0 +1,204 @@
+#include <iostream>
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
+#include <string>
+#include <map>
+#include <vector>
+#include <set>
+#include <queue>
+
+using namespace std;
+
+const int N = 2100;
+
+struct Node{
+    int lay;
+    int data;
+    int height;     //结点高度
+    Node*left,*right;
+    Node(){
+        data = -1;
+        height = 0;
+        left = right = NULL;
+    }
+};
+
+/*
+失衡的四种情况
+1.插入左子树的左结点，右旋操作
+2.插入右子树的右结点，左旋操作
+3.插入左子树的右结点，先左旋再右旋
+4.插入右子树的左结点，先右旋再左旋
+*/
+
+//返回结点高度
+int Height(Node*p)
+{
+    if(p){
+        return p->height;
+    }
+    return 0;
+}
+
+//单左旋,往右子树插入右孩子,使得平衡因子由绝对值1变为绝对值2
+Node*leftRotation(Node*root)
+{
+    Node*p = root->right;
+    root->right = p->left;
+    p->left = root;
+
+    root->height = max(Height(root->right),Height(root->left))+1;  //更新结点高度
+    p->height = max(Height(p->right),Height(p->left))+1;           //更新结点高度
+
+    return p;
+}
+
+//单右旋,往左子树插入左孩子,使得平衡因子由绝对值1变为绝对值2
+Node*rightRotation(Node*root)
+{
+    Node*p = root->left;
+    root->left = p->right;
+    p->right = root;
+
+    root->height = max(Height(root->right),Height(root->left))+1;  //更新结点高度
+    p->height = max(Height(p->right),Height(p->left))+1;           //更新结点高度
+
+    return p;
+}
+
+//先右旋后左旋,往右子树中插入左孩子
+Node*rightLeftRotation(Node*root)
+{
+    root->right = rightRotation(root->right);
+    return leftRotation(root);
+}
+
+//先左旋后右旋,往左子树中插入右孩子
+Node*leftRightRotation(Node*root)
+{
+    root->left = leftRotation(root->left);
+    return rightRotation(root);
+}
+
+Node*insert(Node*root,int key)
+{
+    if(root == NULL){
+        root = new Node();
+        root->data = key;
+    }else if(key > root->data){            //插入到当前结点的右子树上
+        root->right = insert(root->right,key);
+        if(Height(root->right)-Height(root->left) == 2){        //插入后失衡
+            if(key > root->right->data)              //插入右子树的右结点，进行左旋
+                root = leftRotation(root);
+            else if(key < root->right->data)         //插入右子树的左结点，先右旋再左旋
+                root = rightLeftRotation(root);
+        }
+    }else if(key < root->data){           //插入到当前结点的左子树上
+        root->left = insert(root->left,key);
+        if(Height(root->left)-Height(root->right) == 2){       //插入后失衡
+            if(key < root->left->data)               //插入左子树的左结点，进行左旋
+                root = rightRotation(root);
+            else if(key > root->left->data)          //插入左子树的右结点，先左旋再右旋
+                root = leftRightRotation(root);
+        }
+    }
+
+    root->height = max(Height(root->left),Height(root->right))+1;
+    return root;
+}
+
+void destroy(Node*root)
+{
+    if(root == NULL){
+        destroy(root->left);
+        destroy(root->right);
+        delete root;
+        root = NULL;
+    }
+}
+
+//中序遍历
+void inOrder(Node*root)
+{
+    if(root != NULL){
+        inOrder(root->left);
+        cout << root->data << " " << root->height << endl;
+        inOrder(root->right);
+    }
+}
+
+vector<int>vec[N];
+
+//按层次输出ALV树
+void traverse(Node*root)
+{
+    queue<Node*>q;
+    root->lay = 0;
+    q.push(root);
+    int h = Height(root);
+
+    while(!q.empty()){
+        Node*p = q.front();
+        q.pop();
+        int lay = p->lay;
+        vec[lay].push_back(p->data);
+        if(p->left != NULL){
+            p->left->lay = lay+1;
+            q.push(p->left);
+        }
+        if(p->right != NULL){
+            p->right->lay = lay+1;
+            q.push(p->right);
+        }
+    }
+
+    cout << root->data;
+    for(int i = 1; i < h; ++i){
+        for(int j = 0; j < vec[i].size(); ++j){
+            cout << " " << vec[i][j];
+        }
+    }
+    cout << endl;
+}
+
+//判断一颗树是否是完全二叉树
+//使用队列，当队列中弹出空的结点，做个标记，若之后出现非空结点，则不是完全二叉树
+int judge(Node*root)
+{
+    queue<Node*>q;
+    q.push(root);
+
+    int flag = 0;
+    while(!q.empty()){
+        Node*u = q.front();
+        q.pop();
+        if(flag == 1 && u != NULL) return 1;
+        if(u != NULL){
+            q.push(u->left);
+            q.push(u->right);
+        }
+        if(u == NULL && flag == 0){
+            flag = 1;
+        }
+    }
+
+    return 0;
+}
+
+int main()
+{
+    Node*root = NULL;
+    int n,a;
+    cin >> n;
+    for(int i = 0; i < n; ++i){
+        cin >> a;
+        root = insert(root,a);
+    }
+    traverse(root);
+    //inOrder(root);
+    if(judge(root)) cout << "NO" << endl;
+    else cout << "YES" << endl;
+    return 0;
+}

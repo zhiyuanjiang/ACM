@@ -1,0 +1,80 @@
+#include <iostream>
+#include <cstdio>
+
+using namespace std;
+
+typedef long long ll;
+const int N = 100100;
+int mod;
+
+//m种颜色染正n边形的n个顶点的方法数
+//只有旋转置换
+
+int isNotPrime[N],Prime[N],num_Prime;
+void getPrime()
+{
+    memset(isNotPrime,0,sizeof(isNotPrime));
+    num_Prime = 0;
+    for( int i = 2 ; i < N ; ++i ){
+        if( !isNotPrime[i] ) Prime[num_Prime++] = i;
+        for( int j = 0 ; j < num_Prime && i*Prime[j] < N ; ++i ){
+            isNotPrime[i*Prime[j]] = 1;
+            if(i%Prime[j] == 0) break;
+        }
+    }
+}
+
+//求n的欧拉函数值
+int Euler(int n)
+{
+    int ret = n;
+    for( int i = 0 ; Prime[i]*Prime[i] <= n ; ++i ){
+        if(n%Prime[i] == 0){
+            ret = ret/Prime[i]*(Prime[i]-1);
+            while(n%Prime[i] == 0){
+                n /= Prime[i];
+            }
+        }
+    }
+    if( n > 1 ) ret = ret/n*(n-1);
+    return ret%mod;
+}
+
+ll fast_mi(int x,int n)
+{
+    ll ret = 1;
+    x %= mod;
+    while(n){
+        if(n&1) ret = ret*x%mod;
+        x = x*x%mod;
+        n >>= 1;
+    }
+    return ret;
+}
+
+//m种颜色染正n边形
+ll solve(int m,int n)
+{
+    ll re = 0;
+    for( int i = 1 ; i*i <= n ; ++i ){
+        if(n%i == 0){
+            re = (re+Euler(n/i)*fast_mi(m,i-1))%mod;
+            if(i*i == n) continue;
+            re = (re+Euler(i)*fast_mi(m,n/i-1))%mod;
+        }
+    }
+    return re;
+}
+
+int main()
+{
+    getPrime();
+    int T;
+    scanf("%d",&T);
+    while( T-- ){
+        int n;
+        scanf("%d%d",&n,&mod);
+        printf("%lld\n",solve(n,n));
+    }
+    return 0;
+}

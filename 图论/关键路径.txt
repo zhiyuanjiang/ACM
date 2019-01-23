@@ -1,0 +1,83 @@
+#include <iostream>
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+#include <string>
+#include <queue>
+#include <map>
+#include <vector>
+#include <cmath>
+
+using namespace std;
+
+const int N = 1010;
+const int INF = 0x3ffffff;
+
+struct Info{
+    int u,v,tm;
+}Info[N];
+
+struct Edge{
+    int node,len;
+    Edge*next;
+}edge[N];
+Edge*head[N];
+int Ecnt,indeg[N];
+int eve[N],evl[N],ace[N],acl[N];   //事件开始最早时间/最晚时间，活动开始最早时间/最晚时间
+/*
+    点i指向i+1
+    eve[i] = max(eve[i-1]+len);   //正向拓扑排序
+    evl[i] = min(evl[i+1]-len);   //方向拓扑排序
+
+    边i的两个端点为a,b
+    ace[i] = eve[a];
+    acl[i] = evl[b]-len;
+*/
+
+void init()
+{
+    Ecnt = 0;
+    fill(head,head+N,(Edge*)0);
+    memset(indeg,0,sizeof(indeg));
+}
+
+void mkEdge(int a,int b,int c)
+{
+    indeg[b]++;
+    edge[Ecnt].node = b;
+    edge[Ecnt].len = c;
+    edge[Ecnt].next = head[a];
+    head[a] = edge+Ecnt++;
+}
+
+//tick为0正向拓扑求eve,为1反向拓扑求evl
+void topoSort(int n,int tick)
+{
+    queue<int>q;
+    for(int i = 0; i < n; ++i){
+        if(indeg[i] == 0) q.push(i);
+    }
+
+    while(!q.empty()){
+        int u = q.front();
+        q.pop();
+        int flag = 0;
+        for(Edge*p = head[u]; p; p = p->next){
+            flag = 1;
+            int v = p->node;
+            if(tick == 0) eve[v] = max(eve[v],eve[u]+p->len);
+            else evl[v] = min(evl[v],evl[u]-p->len);
+            indeg[v]--;
+            if(indeg[v] == 0)
+                q.push(v);
+        }
+        if(flag == 0)
+            vec.push_back(u);
+    }
+}
+
+int main()
+{
+    
+    return 0;
+}

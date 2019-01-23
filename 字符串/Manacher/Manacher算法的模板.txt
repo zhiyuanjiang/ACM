@@ -1,0 +1,46 @@
+#include <iostream>
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+
+using namespace std;
+
+const int N = 110100;
+int len[2*N];
+char st[2*N],data[N];
+
+int Manacher(char*st,int*len){
+    int id = 0,mx = 0,mlen = 0,slen = strlen(st);
+    //mx是字符x左边的字符中以某个字符为中心的回文串的右端所能到达最远的位置
+    for (int i = 2; i < slen; ++i) {
+
+        if(mx > i) len[i] = min(len[2*id-i], mx-i);
+        else len[i] = 1;
+
+        while(st[i-len[i]] == st[i+len[i]]) len[i]++;
+        if (i + len[i] >= mx) {
+            id = i;
+            mx = i+len[i];
+        }
+        mlen = max(mlen,len[i]);
+    }
+    return mlen-1;
+}
+
+int main()
+{
+    while(~scanf(" %s",data)){
+
+        int slen = strlen(data);
+        //首尾插入不同字符，防止while循环时越界
+        //st[0] = '*',st[2*slen+2] = '\0';
+        for(int i = 0 ; i <= slen ; ++i){
+            st[2*i+1] = '#';
+            st[2*i+2] = data[i];
+        }
+        st[0] = '*';  
+
+        printf("%d\n",Manacher(st,len));
+    }
+    return 0;
+}

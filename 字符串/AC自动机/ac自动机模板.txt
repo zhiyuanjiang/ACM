@@ -1,0 +1,150 @@
+#include <algorithm>
+#include <cstring>
+#include <cstdio>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <queue>
+
+using namespace std;
+
+//hdu2222
+
+#define STCHAR 'a'
+
+const int N = 1000100;
+const int maxn = 26;
+
+char data[N];
+
+struct Trie
+{
+    int num;
+    Trie *next[maxn]; //有多少个分支
+    Trie *fail;
+    Trie(){
+        num = 0;
+        fail = NULL;
+        for(int i=0;i<maxn;i++)
+            next[i] = NULL;
+    }
+};
+// 声明一个根，不含任何信息
+Trie *root;
+//初始化该根
+void trie_init()
+{
+    root = new Trie();
+}
+// 插入一个字符串
+void trie_insert(char *word)
+{
+    Trie *temp = root;
+    int len = strlen(word);
+    for(int i = 0; i < len; ++i){
+        int x = word[i]-'a';
+        if(temp->next[x] == NULL){
+            Trie *cur = new Trie();
+            temp->next[x] = cur;
+        }
+        temp = temp->next[x];
+    }
+    temp->num++;
+}
+
+//建立失败指针
+void build_fail_pointer()
+{
+    Trie *p = root;
+    queue<Trie*>qu;
+    qu.push(p);
+    while(!qu.empty())
+    {
+        p = qu.front();
+        qu.pop();
+        for(int i = 0; i < maxn; i++)
+        {
+            if(p->next[i] != NULL) ///第i个孩子存在
+            {
+                if(p == root)      ///p是根，根节点的孩子的失败指针都指向自己
+                {
+                    p->next[i]->fail = root;
+                }
+                else
+                {
+                    Trie *node = p->fail;
+                    while(node != NULL)
+                    {
+                        if(node->next[i]!=NULL)
+                        {
+                            p->next[i]->fail = node->next[i];
+                            break;
+                        }
+                        node = node->fail;
+                    }
+                    if(node == NULL)
+                        p->next[i]->fail = root;
+                }
+                qu.push(p->next[i]);
+            }
+        }
+    }
+}
+
+int cnt;
+
+void ac_automation(char *ch)
+{
+    Trie *p = root;
+    int len = strlen(ch);
+    for(int i = 0; i < len; i++)
+    {
+        int x = ch[i] - STCHAR;
+        while(!p->next[x] && p != root) p = p->fail;
+        p = p->next[x];
+        if(!p) p = root;
+        Trie *temp = p;
+        while(temp != root)
+        {
+           if(temp->num >= 0)
+           {
+               cnt += temp->num;
+               temp->num = -1;
+           }
+           else break;
+           temp = temp->fail;
+        }
+    }
+}
+
+///记得释放接内存，用完及时归还系统，不然会爆的。
+void freeNode(Trie *node)
+{
+    if(node != NULL)
+    {
+        for(int i = 0; i < maxn; i++)
+            freeNode(node->next[i]);
+    }
+    free(node);
+}
+
+int main()
+{
+    int T,n;
+    scanf("%d",&T);
+    while(T--){
+        scanf("%d",&n);
+        trie_init();
+        for(int i = 0; i < n; ++i){
+            scanf(" %s",data);
+            trie_insert(data);
+        }
+        scanf(" %s",&data);
+        build_fail_pointer();
+        cnt = 0;
+        ac_automation(data);
+        freeNode(root);
+        printf("%d\n",cnt);
+    }
+    return 0;
+}

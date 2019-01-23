@@ -1,0 +1,84 @@
+#include <iostream>
+#include <stack>
+#include <vector>
+#include <cstdio>
+#include <cstring>
+using namespace std;
+const int maxn = 1e3 + 10;
+int low[maxn],dfn[maxn],sccno[maxn];
+int scc_cnt,dep;
+stack<int> s;
+
+/*
+定义DFN(u)为节点u搜索的次序编号(时间戳)，
+Low(u)为u或u的子树能够追溯到的最早的栈中节点的次序号
+Low(u)=Min
+{
+    DFN(u),
+    Low(v),(u,v)为树枝边，u为v的父节点
+    DFN(v),(u,v)为指向栈中节点的后向边(非横叉边)
+}
+
+*/
+
+struct Edge
+{
+    int node;
+    Edge*next;
+}m_edge[maxn*2];
+Edge*head[maxn];
+int Ecnt;
+
+void init()
+{
+    Ecnt = 0;
+    fill( head , head+maxn , (Edge*)0 );
+}
+
+void mkEdge( int a , int b )
+{
+    m_edge[Ecnt].node = b;
+    m_edge[Ecnt].next = head[a];
+    head[a] = m_edge+Ecnt++;
+}
+
+void dfs( int u )
+{
+    s.push(u); 
+    low[u] = dfn[u] = ++dep;
+
+    for( Edge*p = head[u] ; p ; p = p->next ){
+        int v = p->node;
+        if( !dfn[v] ){
+            dfs( v );
+            low[u] = min( low[u] , low[v] );
+        }else if( !sccno[v] ){   //如果v还在栈内
+            low[u] = min( low[u] , dfn[v] );
+        }
+    }
+    if( dfn[u] == low[u] ){
+        scc_cnt++;
+        while( !s.empty() ){
+            int t = s.top();
+            sccno[t] = scc_cnt;
+            s.pop();
+            if( t == u ) break;
+        }
+    }
+}
+
+void find_scc(int n)
+{
+    dep = scc_cnt = 0;
+    memset(sccno,0,sizeof(sccno));
+    memset(dfn,0,sizeof(dfn));
+    for( int i = 0 ; i < n ; ++i )
+        if( !dfn[i] ) dfs(i);
+}
+
+int main()
+{
+    
+    return 0;
+}
+

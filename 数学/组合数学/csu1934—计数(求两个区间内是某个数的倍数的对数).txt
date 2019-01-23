@@ -1,0 +1,222 @@
+#include <iostream>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
+#include <algorithm>
+#include <string>
+#include <stack>
+#include <queue>
+#include <set>
+#include <map>
+
+using namespace std;
+
+typedef long long ll;
+typedef pair<ll,ll>PA;
+const ll N = 100900;
+const ll M = 60;
+const ll INF = 0x3fffffff;
+const double eps = 1e-8;
+const double PI = acos(-1.0);
+const ll mod = 333333333333333331ll;
+
+vector<ll>factor;
+vector<ll>prime_factor;
+
+void getDivisor( ll n )
+{
+    factor.clear();
+    for( ll i = 1 ; i*i <= n ; ++i ){
+        if( n%i == 0 ){
+            factor.push_back(i);
+            if( n/i != i )
+                factor.push_back(n/i);
+        }
+    }
+
+    prime_factor.clear();
+    for( ll i = 2 ; i*i <= n ; ++i ){
+        if( n%i == 0 ){
+            prime_factor.push_back(i);
+            while( n%i == 0 ){
+                n /= i;
+            }
+        }
+    }
+    if( n > 1 ) prime_factor.push_back(n);
+}
+
+ll fast_mult(ll x,ll n)
+{
+    ll ret = 0;
+    x = x%mod;
+    while(n){
+        if(n&1) ret = (ret+x)%mod;
+        x = (x+x)%mod;
+        n >>= 1;
+    }
+    return ret;
+}
+
+ll solve(ll b,int x,ll a)
+{
+    ll s = a/x;
+    vector<ll>p;
+    for( ll i = 0 ; i < prime_factor.size() ; ++i ){
+        if( s%prime_factor[i] == 0 ) p.push_back(prime_factor[i]);
+    }
+
+    ll sz = p.size();
+    ll sum = b/x;
+    for( ll i = 1 ; i < (1<<sz) ; ++i ){
+        ll mult = x,bits = 0;
+        for( ll j = 0 ; j < sz ; ++j ){
+            if( i&(1<<j) ){
+                ++bits;
+                mult = mult*p[j]%mod;
+            }
+        }
+        ll cur = b/mult;
+        if(bits%2 == 1) sum = (sum-cur)%mod;
+        else sum = (sum+cur)%mod;
+    }
+
+    return sum;
+}
+
+int main()
+{
+//    freopen("in.txt","r",stdin);
+//    freopen("yuan.txt","w",stdout);
+    ll a,b,c;
+    while( ~scanf("%lld%lld%lld",&a,&b,&c) ){
+        getDivisor((ll)a);
+        ll sum = 0;
+        for( ll i = 0 ; i < factor.size() ; ++i ){
+            ll t = solve(b,factor[i],a);
+            ll s = c/(a/factor[i]);
+            sum = (sum+fast_mult(t,s))%mod;
+        }
+        printf("%lld\n",sum);
+    }
+    return 0;
+}
+
+
+
+///////////////////////////////////
+#include <iostream>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
+#include <algorithm>
+#include <string>
+#include <stack>
+#include <queue>
+#include <set>
+#include <map>
+
+using namespace std;
+
+typedef long long ll;
+typedef pair<ll,ll>PA;
+const ll N = 100900;
+const ll M = 60;
+const ll INF = 0x3fffffff;
+const double eps = 1e-8;
+const double PI = acos(-1.0);
+const ll mod = 333333333333333331ll;
+
+vector<ll>factor;
+vector<ll>prime_factor;
+
+ll gcd(ll a,ll b)
+{
+    return b==0?a:gcd(b,a%b);
+}
+
+ll lcm(ll a,ll b)
+{
+    return a/gcd(a,b)*b;
+}
+
+void getDivisor( ll n )
+{
+    factor.clear();
+    for( ll i = 1 ; i*i <= n ; ++i ){
+        if( n%i == 0 ){
+            factor.push_back(i);
+            if( n/i != i )
+                factor.push_back(n/i);
+        }
+    }
+
+    prime_factor.clear();
+    for( ll i = 2 ; i*i <= n ; ++i ){
+        if( n%i == 0 ){
+            prime_factor.push_back(i);
+            while( n%i == 0 ){
+                n /= i;
+            }
+        }
+    }
+    if( n > 1 ) prime_factor.push_back(n);
+}
+
+ll fast_mult(ll x,ll n)
+{
+    ll ret = 0;
+    x = x%mod;
+    while(n){
+        if(n&1) ret = (ret+x)%mod;
+        x = (x+x)%mod;
+        n >>= 1;
+    }
+    return ret;
+}
+
+ll solve(ll b,int x,ll a)
+{
+    ll s = a/x;
+    vector<ll>p;
+    for( ll i = 0 ; i < prime_factor.size() ; ++i ){
+        if( s%prime_factor[i] == 0 ) p.push_back(prime_factor[i]*x);
+    }
+
+    ll sz = p.size();
+    ll sum = b/x;
+    for( ll i = 1 ; i < (1<<sz) ; ++i ){
+        ll mult = 1,bits = 0;
+        for( ll j = 0 ; j < sz ; ++j ){
+            if( i&(1<<j) ){
+                ++bits;
+                //求最小公倍数
+                mult = lcm(mult,p[j])%mod;
+            }
+        }
+        ll cur = b/mult;
+        if(bits%2 == 1) sum = (sum-cur)%mod;
+        else sum = (sum+cur)%mod;
+    }
+
+    return sum;
+}
+
+int main()
+{
+//    freopen("in.txt","r",stdin);
+//    freopen("yuan.txt","w",stdout);
+    ll a,b,c;
+    while( ~scanf("%lld%lld%lld",&a,&b,&c) ){
+        getDivisor((ll)a);
+        ll sum = 0;
+        for( ll i = 0 ; i < factor.size() ; ++i ){
+            ll t = solve(b,factor[i],a);
+            ll s = c/(a/factor[i]);
+            sum = (sum+fast_mult(t,s))%mod;
+        }
+        printf("%lld\n",sum);
+    }
+    return 0;
+}
+

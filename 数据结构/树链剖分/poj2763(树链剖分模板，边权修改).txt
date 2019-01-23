@@ -1,0 +1,165 @@
+#include <iostream>
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+
+using namespace std;
+
+#define lowbit(x) (x&-x)
+
+//#pragma comment(linker, "/STACK:1024000000,1024000000")
+
+//poj2763
+//将一条边对应成一个点,利用点的深度,一条边上较深的点对应成该边
+
+const int maxn = 10010;
+const int N = 100010;
+
+struct store{
+    int u,v,len;
+}vec[N];
+
+struct Edge{
+    int node;
+    Edge*next;
+}edge[N*2];
+Edge*head[N];
+
+int Ecnt,index;
+
+int sz[N],top[N],son[N],dep[N],fa[N],tid[N],rk[N];
+
+void init()
+{
+    Ecnt = index = 0;
+    memset(son,-1,sizeof(son));
+    fill(head,head+N,(Edge*)0);
+}
+
+void mkEdge(int a,int b)
+{
+    edge[Ecnt].node = b;
+    edge[Ecnt].next = head[a];
+    head[a] = edge+Ecnt++;
+}
+
+void dfs1(int u,int father,int d)
+{
+    dep[u] = d;
+    fa[u] = father;
+    sz[u] = 1;
+    for(Edge*p = head[u]; p; p = p->next){
+        int v = p->node;
+        if(v != father){
+            dfs1(v,u,d+1);
+            sz[u] += sz[v];
+            if(son[u] == -1 || sz[v] > sz[son[u]]){
+                son[u] = v;
+            }
+        }
+    }
+}
+
+void dfs2(int u,int tp)
+{
+    top[u] = tp;
+    tid[u] = ++index;
+    rk[tid[u]] = u;
+    if(son[u] == -1) return;
+    dfs2(son[u],tp);
+    for(Edge*p = head[u]; p; p = p->next){
+        int v = p->node;
+        if(v != son[u] && v != fa[u]){
+            dfs2(v,v);
+        }
+    }
+}
+
+int C[N],A[N];
+
+void add(int x,int k,int n)
+{
+    int t = k-A[x];
+    A[x] = k;
+    while(x <= n){
+        C[x] += t;
+        x += lowbit(x);
+    }
+}
+
+int sum(int x,int n)
+{
+    int ret = 0;
+    while(x){
+        ret += C[x];
+        x -= lowbit(x);
+    }
+    return ret;
+}
+
+int solve(int s,int e,int n)
+{
+    int u = s,v = e,f1,f2,ans = 0;
+    while(u != v){
+        if(dep[u] > dep[v]){
+            swap(u,v);
+        }
+        f1 = top[u];
+        f2 = top[v];
+        if(f1 == f2){
+            ans += sum(tid[v],n)-sum(tid[son[u]]-1,n);
+            v = u;
+        }else if(dep[f1] > dep[f2]){
+            ans += sum(tid[u],n)-sum(tid[f1]-1,n);
+            u = fa[f1];
+        }else{
+            ans += sum(tid[v],n)-sum(tid[f2]-1,n);
+            v = fa[f2];
+        }
+    }
+    return ans;
+}
+
+int main()
+{
+    int n,q,s;
+    while(~scanf("%d%d%d",&n,&q,&s)){
+        init();
+        int a,b,c;
+        for(int i = 0; i < n-1; ++i){
+            scanf("%d%d%d",&a,&b,&c);
+            mkEdge(a,b);
+            mkEdge(b,a);
+            vec[i].u = a; vec[i].v = b; vec[i].len = c;
+        }
+
+        dfs1(1,0,1);
+        dfs2(1,1);
+
+        memset(A,0,sizeof(A));
+        memset(C,0,sizeof(C));
+        for(int i = 0; i < n-1; ++i){
+            int u = vec[i].u,v = vec[i].v;
+            int t = (dep[u] > dep[v]) ? u : v;
+            add(tid[t],vec[i].len,n);
+        }
+
+        for(int i = 0; i < q; ++i){
+            scanf("%d",&a);
+            if(a == 1){
+                scanf("%d%d",&b,&c);
+                int u = vec[b-1].u,v = vec[b-1].v;
+                int t = (dep[u] > dep[v]) ? u : v;
+                add(tid[t],c,n);
+            }else{
+                scanf("%d",&b);
+                printf("%d\n",solve(s,b,n));
+                s = b;
+            }
+        }
+    }
+
+    return 0;
+}
+
+

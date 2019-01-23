@@ -1,0 +1,110 @@
+#include <iostream>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
+#include <algorithm>
+#include <string>
+#include <stack>
+#include <queue>
+#include <set>
+
+using namespace std;
+
+typedef long long ll;
+const int N = 40900;
+const int M = 109;
+const int INF = 0x3fffffff;
+const double eps = 1e-8;
+const double PI = acos(-1.0);
+
+int parent[M],Flag[M];
+int match[M],graph[M][M];
+
+bool find( int x , int n )
+{
+    for( int i = 1 ; i <= n ; ++i ){
+        //x能与i匹配，且i在本轮未被访问
+        if( graph[x][i] && !Flag[i] ){
+            Flag[i] = true;
+            //i没被匹配或i的对象能找到其他匹配对象
+            if( match[i] == 0 || find(match[i],n) ){
+                match[i] = x;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+int check( int a )
+{
+    while( a != parent[a] ){
+        parent[a] = parent[parent[a]];
+        a = parent[a];
+    }
+    return a;
+}
+
+void merge( int a , int b )
+{
+    int i = check(a);
+    int j = check(b);
+    if( i != j ) parent[i] = j;
+}
+
+//构建二分图
+void Build( int n , int m , int f )
+{
+    memset( graph , 0 , sizeof(graph) );
+    for( int i = 0 ; i < M ; ++i ) parent[i] = i;
+    int a,b;
+    for( int i = 0 ; i < m ; ++i ){
+        scanf("%d%d",&a,&b);
+        graph[a][b] = 1;
+    }
+    for( int i = 0 ; i < f; ++i ){
+        scanf("%d%d",&a,&b);
+        merge(a,b);
+    }
+
+    for( int i = 1 ; i <= n ; ++i ) parent[i] = check(i);
+
+    for( int i = 1 ; i <= n ; ++i ){
+        for( int j = 1 ; j <= n ; ++j ){
+            if( i == j ) continue;
+            if( parent[j] == parent[i] ){
+                for( int k = 1 ; k <= n ; ++k ){
+                    if( graph[j][k] == 1 ) graph[i][k] = 1;
+                }
+            }
+        }
+    }
+}
+
+bool solve( int n )
+{
+    fill( match , match+M , 0 );
+    for( int i =  1 ; i <= n ; ++i ){
+        fill( Flag , Flag+M , 0 );
+        if( !find(i,n) ) return false;
+    }
+    //匹配一次后的边就不能再用了
+    for( int i = 1 ; i <= n ; ++i ){
+        graph[match[i]][i] = 0;
+    }
+    return true;
+}
+
+int main()
+{
+    int T;
+    scanf("%d",&T);
+    while( T-- ){
+        int n,m,f,cnt = 0;
+        scanf("%d%d%d",&n,&m,&f);
+        Build(n,m,f);
+        while( solve(n) ) cnt++;
+        printf("%d\n",cnt);
+    }
+    return 0;
+}

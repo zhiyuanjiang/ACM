@@ -1,0 +1,98 @@
+#include <bits/stdc++.h>
+
+typedef long long llt;
+
+using namespace std;
+
+const int INF = 0x3fffffff;
+const int N = 100010;
+const int M = 100010;
+const double pi = acos(-1);
+const int mod = 1e9+7;
+
+//hdu2586
+
+struct Edge{
+    int node,len;
+    Edge*next;
+}edge[N];
+Edge*head[N];
+int Ecnt,ant[N][30],dep[N];
+
+void init()
+{
+    Ecnt = 0;
+    fill(head,head+N,(Edge*)0);
+    memset(ant,0,sizeof(ant));
+    memset(dep,0,sizeof(dep));
+}
+
+void mkEdge(int a,int b,int len)
+{
+    edge[Ecnt].node = b;
+    edge[Ecnt].len = len;
+    edge[Ecnt].next = head[a];
+    head[a] = edge+Ecnt++;
+}
+
+void dfs(int u,int fa)
+{
+    ant[u][0] = fa;
+    for(int i = 1; i <= 20; ++i){
+        ant[u][i] = ant[ant[u][i-1]][i-1];
+    }
+    for(Edge *p = head[u]; p; p = p->next){
+        int v = p->node;
+        if(v == fa) continue;
+        dep[v] = dep[u]+p->len;
+        dfs(v,u);
+    }
+}
+
+int lca(int u,int v)
+{
+    if(dep[u] < dep[v])
+        swap(u,v);
+    for(int i = 20; i >= 0; --i){
+        if(dep[ant[u][i]] >= dep[v]){
+            u = ant[u][i];
+        }
+    }
+    if(u == v)
+        return u;
+    //Ìøµ½x-1µÄÎ»ÖÃ
+    for(int i = 20; i >= 0; --i){
+        if(ant[u][i] != ant[v][i]){
+            u = ant[u][i];
+            v = ant[v][i];
+        }
+    }
+    return ant[u][0];
+}
+
+inline int solve(int u,int v)
+{
+    return dep[u]+dep[v]-2*dep[lca(u,v)];
+}
+
+int main()
+{
+    int T;
+    scanf("%d",&T);
+    while(T--){
+        init();
+        int n,m,a,b,c;
+        scanf("%d%d",&n,&m);
+        for(int i = 0; i < n-1; ++i){
+            scanf("%d%d%d",&a,&b,&c);
+            mkEdge(a,b,c);
+            mkEdge(b,a,c);
+        }
+        dfs(1,0);
+        for(int i = 0; i < m; ++i){
+            scanf("%d%d",&a,&b);
+            printf("%d\n",solve(a,b));
+        }
+    }
+    return 0;
+}

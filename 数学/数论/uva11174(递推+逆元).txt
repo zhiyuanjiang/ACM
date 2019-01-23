@@ -1,0 +1,126 @@
+#include <iostream>
+#include <cstring>
+#include <string>
+#include <algorithm>
+#include <cmath>
+
+using namespace std;
+
+typedef long long ll;
+
+const int mod = 1e9+7;
+const int N = 40100;
+
+struct Edge{
+    int node;
+    Edge*next;
+}m_edge[N*2];
+int Ecnt,son[N],parent[N];
+Edge*head[N];
+
+void init()
+{
+    Ecnt = 0;
+    fill(head,head+N,(Edge*)0);
+}
+
+void mkEdge(int a,int b)
+{
+    m_edge[Ecnt].node = b;
+    m_edge[Ecnt].next = head[a];
+    head[a] = m_edge+Ecnt++;
+}
+
+void dfs( int u )
+{
+    son[u] = 1;
+    for( Edge*p = head[u] ; p ; p = p->next ){
+        int v = p->node;
+        dfs(v);
+        son[u] += son[v];
+    }
+}
+
+ll inv[N],fac[N];    //逆元,阶乘打表
+
+//费马小定理求逆元
+//ll fast_mi(ll x,ll n)
+//{
+//    ll res = 1;
+//    while(n){
+//        if(n&1) res = (res*x)%mod;
+//        x = x*x%mod;
+//        n >>= 1;
+//    }
+//    return res;
+//}
+
+//拓展的欧基里得求逆元
+ll e_gcd(ll a,ll b,ll&x,ll&y)
+{
+    if(b == 0){
+        x = 1; y = 0;
+        return a;
+    }
+    ll ans = e_gcd(b,a%b,x,y);
+    ll temp = x;
+    x = y;
+    y = temp-a/b*y;
+    return ans;
+}
+
+//预处理
+void pretreat()
+{
+    fac[0] = 1LL;
+    for( int i = 1 ; i <= 40000 ; ++i ){
+        fac[i] = (fac[i-1]*i)%mod;
+    }
+
+//    for( int i = 1 ; i <= 40000 ; ++i ){
+//        inv[i] = fast_mi(i,(ll)(mod-2));
+//    }
+
+    ll x,y;
+    for( int i = 1 ; i <= 40000 ; ++i ){
+        e_gcd((ll)i,(ll)mod,x,y);
+        x %= mod;
+        if(x < 0) x += mod;
+        inv[i] = x;
+    }
+}
+
+int main()
+{
+    pretreat();
+    int T;
+    scanf("%d",&T);
+    while(T--){
+        init();
+        int n,m;
+        scanf("%d%d",&n,&m);
+        init();
+        int a,b;
+
+        memset(parent,0,sizeof(parent));
+        for( int i = 0 ; i < m ; ++i ){
+            scanf("%d%d",&a,&b);
+            mkEdge(b,a);
+            parent[a] = b;
+        }
+
+        for( int i = 1 ; i <= n ; ++i ){
+            if(parent[i] == 0) mkEdge(0,i);
+        }
+
+        dfs(0);
+
+        ll ans = fac[n];
+        for( int i = 1 ; i <= n ; ++i ){
+            ans = (ans*inv[son[i]])%mod;
+        }
+
+        printf("%lld\n",ans);
+    }
+    return 0;
+}

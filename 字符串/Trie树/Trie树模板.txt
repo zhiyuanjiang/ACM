@@ -1,0 +1,79 @@
+#define STCHAR 'a'
+
+const int maxn = 26;
+
+struct Trie
+{
+    bool flag;        //从根到此是否为一个单词
+    int cnt;          //记录前缀数
+    Trie *next[maxn]; //有多少个分支
+    Trie(){
+        flag = false;
+        cnt = 0;
+        for(int i=0;i<maxn;i++)
+            next[i] = NULL;
+    }
+};
+// 声明一个根，不含任何信息
+Trie *root;
+//初始化该根
+void trie_init()
+{
+    root = new Trie();
+}
+// 插入一个字符串
+void trie_insert(char *word)
+{
+    Trie *temp = root;
+    while(*word != '\0')
+    {
+        if(temp->next[*word-STCHAR] == NULL)// 为空才建立
+        {
+            Trie *cur = new Trie();
+            temp->next[*word-STCHAR] = cur;
+        }
+        temp = temp->next[*word-STCHAR];
+        temp->cnt++;
+
+        word++;
+    }
+    temp->flag = true;//插入一个完整的单词
+}
+
+// 查找一个字符串
+int trie_search(char *word)
+{
+    Trie *temp = root;
+    for(int i = 0; word[i] != '\0'; i++)
+    {
+        if(temp == NULL || temp->next[word[i]-STCHAR] == NULL)
+            return 0;
+        temp = temp->next[word[i]-STCHAR];
+    }
+    return temp->cnt;
+}
+
+//遍历整个字典树，寻找next指针都为空的单词个数
+int ans;
+void trie_traverse(Trie *root)
+{
+    int flag = 0;
+    for( int i = 0 ; i < maxn ; ++i ){
+        if(root->next[i] != NULL){
+            flag = 1;
+            trie_traverse(root->next[i]);
+        }
+    }
+    if(root->flag == true && flag == 0)
+        ans++;
+}
+
+void trie_del(Trie *cur)
+{
+    for(int i = 0;i < maxn;i++)
+    {
+        if(cur->next[i] != NULL)
+            trie_del(cur->next[i]);
+    }
+    delete cur;
+}

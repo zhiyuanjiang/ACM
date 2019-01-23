@@ -1,0 +1,19 @@
+sscanf从一个字符串中读取数据
+原形：
+int sscanf(const char*buffer,const char*format[]...);
+    
+读取整数
+int a,b,c;
+char st[] = "2012:10:3";
+sscanf(st,"%d:%d:%d",&a,&b,&c);
+    
+读取字符串可以使用%[]
+%[a-z]:匹配a到z中的任意字符,贪婪性(尽可能多的匹配)
+%[aB']:匹配a,B,',中的一员,贪婪性
+%[^a]: 匹配非a的任意字符,贪婪性
+%*s:表示过滤掉这个字符串
+    
+const char*s = "iios/12DDWDFF@122";
+char buf[20];
+sscanf(s,"%*[^/]/%[^@]",buf);
+buf为"12DDWDFF"

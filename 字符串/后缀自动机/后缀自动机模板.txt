@@ -1,0 +1,97 @@
+#include <iostream>
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+#include <string>
+#include <queue>
+#include <map>
+
+using namespace std;
+
+typedef long long llt;
+
+const int N = 1010;
+
+//后缀自动机
+/*
+算法实现:
+1. 令last为对应整个字符串的状态（最初last=0，在每次字符添加操作后我们都会改变last的值）。
+
+2.建立一个新的状态cur，令len(cur)=len(last)+1，而link(cur)的值并不确定。
+
+3. 我们最初在last，如果它没有字符c的转移，那就添加字符c的转移，指向cur，
+然后走向其后缀链接，再次检查——如果没有字符c的转移，就添加上去。如果在
+某个节点已有字符c的转移，就停止，并且令p为这个状态的编号。
+
+4.如果“某节点已有字符c的转移”这一事件从未发生，而我们来到了空状态-1（经由t_0的后缀指针前来），
+我们简单地令link(cur)=0，跳出。
+
+5.假设我们停在了某一状态q，是从某一个状态p经字符c的转移而来。现在有两种情况：len(p)+1=len(q)或不然。
+
+6.如果len(p)+1=len(q)，那么我们简单地令link(cur)=q，跳出。
+
+7.否则，情况就变得更加复杂。必须新建一个q的“拷贝”状态：建立一个新的状态clone，
+将q的数据拷贝给它（后缀链接，以及转移），除了len的值：需要令len(clone)=len(p)+1.
+
+8.在拷贝之后，我们将cur的后缀链接指向clone，并将q的后缀链接重定向到clone。
+
+9.最终，我们需要做的最后一件事情就是——从p开始沿着后缀链接走，对每个状态
+我们都检查是否有指向q的，字符c的转移，如果有就将其重定向至clone（如果没有，就终止循环）。
+
+10.在任何情况下，无论在何处终止了这次添加操作，我们最后都将更新last的值，将其赋值为cur。
+如果我们还需要知道哪些节点是终止节点而哪些不是，我们可以在构建整个字符串的后缀自动机之后
+找出所有终止节点。对此我们考虑对应整个字符串的节点（显然，就是我们储存在变量last中的节点），
+我们沿着它的后缀链接走，直到到达初始状态，并且将途径的每个节点标记为终止节点。很好理解，
+如此我们标记了字符串s所有后缀的对应状态，也就是我们想要找出的终止状态。
+
+*/
+
+struct state{
+    int len,link;  //link为后缀链接，len表示结点到起始结点的最大长度
+    map<char,int>next;  //st[0].next[c] = 1表示0结点经过状态c转移到节点1
+}st[N*2];
+
+int sz,last;
+
+void sa_init()
+{
+    sz = last = 0;
+    st[0].len = 0;
+    st[0].link = -1;
+    ++sz;
+
+    for(int i = 0; i < N; ++i)
+        st[i].next.clear();
+}
+
+void sa_extend(char c)
+{
+    int cur = sz++;         //新添加的状态结点
+    st[cur].len = st[last].len+1;
+    int p;
+    for(p = last; p != -1 && !st[p].next.count(c); p = st[p].link)
+        st[p].next[c] = cur;
+    if(p == -1)
+        st[cur].link = 0;
+    else{
+        int q = st[p].next[c];
+        if(st[p].len+1 == st[q].len)
+            st[cur].link = q;
+        else{
+            int clone = sz++;
+            st[clone].len = st[p].len+1;
+            st[clone].next = st[q].next;
+            st[clone].link = st[q].link;
+            for(; p != -1 && st[p].next[c] == q; p = st[p].link)
+                st[p].next[c] = clone;
+            st[q].link = st[cur].link = clone;
+        }
+    }
+    last = cur;
+}
+
+int main()
+{
+
+    return 0;
+}

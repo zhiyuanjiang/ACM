@@ -1,0 +1,100 @@
+#include <iostream>
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+#include <string>
+#include <set>
+#include <vector>
+
+using namespace std;
+
+typedef long long ll;
+
+/*
+因为数据范围太大，而数据量又很少，所以可以先对数据进行离散化。
+因为只要统计可见海报的数量
+建立线段树，对数据进行更新，这里无需合并区间，只需将懒惰标记传下去就行
+因为最后我们是对所有点的海报进行单点查询
+*/
+
+const int maxn = 200010;
+int A[maxn],data[maxn];
+int Ma[maxn<<2],Add[maxn<<2]; //Ma求和,Add为懒惰标记
+vector<pair<int,int> >vec;
+
+void PushDown(int rt)
+{
+    if(Add[rt]){
+        //下推标记
+        Add[rt<<1] = Add[rt];
+        Add[rt<<1|1] = Add[rt];
+        //对该结点处理
+        Ma[rt<<1] = Add[rt];
+        Ma[rt<<1|1] = Add[rt];
+
+        Add[rt] = 0;
+    }
+}
+
+//区间修改  A[L,R] = C
+void Update(int L,int R,int C,int l,int r,int rt)
+{
+    //无需合并区间，只需要向下传递标记
+    if(L <= l && r <= R){
+        Ma[rt] = C;
+        Add[rt] = C;
+        return;
+    }
+    int m = (l+r)>>1;
+    PushDown(rt);
+    if(L <= m) Update(L,R,C,l,m,rt<<1);
+    if(R >  m) Update(L,R,C,m+1,r,rt<<1|1);
+}
+
+int Query(int L,int l,int r,int rt)
+{
+    if(l == r){
+        return Ma[rt];
+    }
+    int m = (l+r)>>1;
+    PushDown(rt);
+    if(L <= m) return Query(L,l,m,rt<<1);
+    else return Query(L,m+1,r,rt<<1|1);
+}
+
+int main()
+{
+    int T,n;
+    scanf("%d",&T);
+    while(T--){
+        scanf("%d",&n);
+        int a,b,cnt = 0;
+        vec.clear();
+        for(int i = 1; i <= n; ++i){
+            scanf("%d%d",&a,&b);
+            data[cnt++] = a;
+            data[cnt++] = b;
+            vec.push_back(make_pair(a,b));
+        }
+        sort(data,data+cnt);
+        int sz = unique(data,data+cnt)-data;
+        for(int i = 0; i < n; ++i){
+            int l = lower_bound(data,data+sz,vec[i].first)-data+1;
+            int r = lower_bound(data,data+sz,vec[i].second)-data+1;
+            Update(l,r,i+1,1,sz,1);
+        }
+        int ans = 0;
+        memset(A,0,sizeof(A));
+        for(int i = 1; i <= sz; ++i){
+            int a = Query(i,1,sz,1);
+            A[a] = 1;
+        }
+        for(int i = 1; i <= sz; ++i){
+            if(A[i]) ans++;
+        }
+        printf("%d\n",ans);
+    }
+    return 0;
+}
+
+

@@ -1,0 +1,106 @@
+#include <cstdio>
+#include <cmath>
+#include <vector>
+#include <cstring>
+#include <map>
+#include <string>
+#include <algorithm>
+#include <iostream>
+#include <set>
+
+using namespace std;
+typedef long long ll;
+typedef pair<int,int>PA;
+
+const int N = 200100;
+
+struct Edge{
+    int u,v,len,num;
+    bool operator < (const Edge&a)const{
+        return a.len > len;
+    }
+}E[N],ET[N];
+int parent[N],tick[N];
+set<int>st[N];
+vector<PA>vec;
+
+int find(int a)
+{
+    while(a != parent[a]){
+        parent[a] = parent[parent[a]];
+        a = parent[a];
+    }
+    return a;
+}
+
+void kruskal(int m)
+{
+    for( int i = 0 ; i < m ; ++i ) ET[i] = E[i];
+    sort(ET,ET+m);
+
+    int maxu,maxv;   //u,v的set集中最大元素的值
+    for( int i = 0 ; i < m ; ++i ){
+        int u = find(ET[i].u);
+        int v = find(ET[i].v);
+
+        if(u != v){
+
+            maxu = *(--st[u].end());
+            maxv = *(--st[v].end());
+
+            PA p;
+            if(maxu < maxv){
+                p.first = maxu;
+                p.second = *st[v].lower_bound(maxu);
+                vec.push_back(p);
+            }else{
+                p.first = maxv;
+                p.second = *st[u].lower_bound(maxv);
+                vec.push_back(p);
+            }
+
+            if(st[u].size() > st[v].size()){
+                swap(u,v);
+            }
+
+            for( set<int>::iterator it = st[u].begin() ; it != st[u].end() ; ++it ){
+                st[v].insert(*it);
+            }
+
+            parent[u] = v;
+
+        }else{
+            vec.push_back(PA(0,0));
+        }
+
+        tick[ET[i].num] = i;
+    }
+}
+
+int main()
+{
+    int n,m;
+    while(~scanf("%d%d",&n,&m)){
+
+        vec.clear();
+        for( int i = 0 ; i < N ; ++i ){
+            st[i].clear();
+            st[i].insert(i);
+            parent[i] = i;
+            tick[i] = -1;
+        }
+
+        for( int i = 0 ; i < m ; ++i ){
+            scanf("%d%d%d",&E[i].u,&E[i].v,&E[i].len);
+            E[i].num = i;
+        }
+
+        kruskal(m);
+
+        for( int i = 0 ; i < m ; ++i ){
+            int num = tick[E[i].num];
+            printf("%d %d\n",vec[num].first,vec[num].second);
+        }
+    }
+	return 0;
+}

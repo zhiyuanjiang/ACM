@@ -1,0 +1,169 @@
+#include <iostream>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
+#include <algorithm>
+#include <string>
+#include <stack>
+#include <queue>
+#include <set>
+#include <map>
+#include <vector>
+
+using namespace std;
+
+typedef long long ll;
+typedef pair<int,int>PA;
+const int N = 1000900;
+const int M = 1090;
+const int INF = 0x3fffffff;
+const double eps = 1e-8;
+const double PI = acos(-1.0);
+
+/*
+    求点的双联通分量:
+    维护一个栈，每找到生成树的边或回边，就把这条边加入栈中
+    如果遇到某个顶点u的子女顶点v满足dfn[u]<=low[v],将边一条条取出，直到遇到边(u,v)
+
+    求边的双联通分量:
+    先找出所有的割边，标记一下，然后搜一下就行了
+*/
+
+struct Edge{
+    int node;
+    Edge*next;
+}m_edge[N*2];
+Edge*head[M];
+int low[M],dfn[M],Flag[M],Ecnt;
+int ret[M][M],color[M],tick[M],num,dep;
+//num统计联通分量的数目,tick标记图中双联通分量的点
+stack<PA>st;
+vector<int>graph[M];
+
+void init()
+{
+    Ecnt = num = dep = 0;
+    //fill( Flag , Flag+M , 0 );
+    fill( head , head+M , (Edge*)0 );
+    for( int i = 0 ; i < M ; ++i ) graph[i].clear();
+
+}
+
+void mkEdge( int a , int b )
+{
+    m_edge[Ecnt].node = b;
+    m_edge[Ecnt].next = head[a];
+    head[a] = m_edge+Ecnt++;
+}
+
+void tarjan( int u , int father )
+{
+    Flag[u] = 1;
+    low[u] = dfn[u] = ++dep;
+    //st.push(u);
+    for( Edge*p = head[u] ; p ; p = p->next ){
+        int v = p->node;
+        if( ret[u][v] != 2 ){
+            st.push(PA(u,v));
+            ret[u][v] = ret[v][u] = 2;
+        }
+        if( !Flag[v] ){
+            tarjan(v,u);
+            low[u] = min(low[u],low[v]);
+            //求点的双联通分量
+            if( low[v] >= dfn[u] ){
+                num++;
+                while( !st.empty() ){
+                    int t1 = st.top().first;
+                    int t2 = st.top().second;
+                    graph[num].push_back(t1);
+                    graph[num].push_back(t2);
+                    st.pop();
+                    if( (t1 == u && t2 == v) || (t1 == v && t2 == u) ) break;
+                }
+            }
+        }
+        //v是u的祖先，且(u,v)是一条回边
+        if( v != father && Flag[v] )
+            low[u] = min(low[u],dfn[v]);
+    }
+}
+
+//判断点双联通分量中是否含有奇圈
+bool getColor( int u )
+{
+    for( Edge*p = head[u] ; p ; p = p->next ){
+        int v = p->node;
+        //找双联通分量中的点
+        if( tick[v] ){
+            if( color[u] == color[v] ) return true;
+            if( color[v] == -1 ){
+                color[v] = color[u]^1;
+                if( getColor(v) ) return true;
+            }
+        }
+    }
+    return false;
+}
+
+//图不一定联通，获取所有的双联通分量
+void getPoint( int n )
+{
+    fill( Flag , Flag+M , 0 );
+    while( !st.empty() ) st.pop();
+    for( int i = 1 ; i <= n ; ++i ){
+        if( !Flag[i] ) tarjan( i , -1 );
+    }
+}
+
+int Cal( int n )
+{
+    fill( Flag , Flag+M , 0 );
+    for( int i = 1 ; i <= num ; ++i ){
+        fill( tick , tick+M , 0 );
+        fill( color , color+M , -1 );
+        for( int j = 0 ; j < graph[i].size() ; ++j ){
+            tick[graph[i][j]] = 1;
+        }
+        int t = graph[i][0];
+        color[t] = 0;
+        if( getColor(t) )
+            for( int j = 1 ; j <= n ; ++j ) Flag[j] += tick[j];
+    }
+    int ans = 0;
+    for( int i = 1 ; i <= n ; ++i ){
+        if( !Flag[i] ) ans++;
+    }
+    return ans;
+}
+
+void Build( int n , int m )
+{
+    int a,b;
+    memset( ret , 0 , sizeof(ret) );
+    for( int i = 0 ; i < m ; ++i ){
+        scanf("%d%d",&a,&b);
+        ret[a][b] = ret[b][a] = 1;
+    }
+    for( int i = 1 ; i <= n ; ++i ){
+        for( int j = i+1 ; j <= n ; ++j ){
+            //两个人不互相仇视
+            if( ret[i][j] == 0 ){
+                mkEdge(i,j);
+                mkEdge(j,i);
+            }
+        }
+    }
+}
+
+int main()
+{
+     int n,m;
+     while( ~scanf("%d%d",&n,&m)&&n&&m ){
+         init();
+         Build(n,m);
+         getPoint(n);
+         printf("%d\n",Cal(n));
+     }
+     return 0;
+}

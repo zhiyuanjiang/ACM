@@ -1,0 +1,171 @@
+#include <iostream>
+#include <algorithm>
+#include <cstring>
+#include <cstdio>
+#include <queue>
+
+using namespace std;
+
+/*
+题目大意：一个长度为m的字符串，不包含模式串的个数。
+http://blog.csdn.net/morgan_xww/article/details/7834801
+
+对于一个长度为x的字符串，变成x+1的字符串，有4种转移方法，在后面添加A，C，G或T。
+所以我们将一个长度为0的字符串变成长度为m的字符串，在转移过程中不包含模式串，一共有多少中转移方法。
+用模式串建立ac自动机。
+通过自动机上结点关系得到结点间的状态转移，记录成一个邻接矩阵trie[i][j]，表示结点i到节点j的路径数。
+添加一个字符相当于在图上走一步。
+我们要计算从根结点走m步到合法结点的路径数，trie^m。
+不合法结点：ac自动机上的结点是模式串的最后一个字符或是字符失败指针指向的结点是模式串最后一个字符。
+
+状态转移：
+if trie[u][i] = -1
+trie[u][i] = trie[fail[u]][i];
+*/
+
+typedef long long ll;
+
+const int maxn = 105;
+const int col = 4;
+const int mod = 100000;
+
+struct Matrax{
+    int r,c;
+    ll a[maxn][maxn];
+    Matrax(){
+        memset(a,0,sizeof(a));
+    }
+};
+
+Matrax Multi_Matrax(Matrax x,Matrax s)
+{
+    Matrax ans;
+    ans.r = x.r;   ans.c = s.c;
+    for(int i = 0; i < ans.r; ++i){
+        for(int j = 0; j < ans.c; ++j){
+            for(int k = 0; k < ans.c; ++k){
+                ans.a[i][j] = (ans.a[i][j]+(x.a[i][k]*s.a[k][j])%mod);
+            }
+            ans.a[i][j] %= mod;
+        }
+    }
+    return ans;
+}
+
+Matrax Fast_Matrax(Matrax temp,ll n)
+{
+    Matrax ans;
+    ans.r = ans.c = temp.r;
+    for(int i = 0; i < ans.r; ++i) ans.a[i][i] = 1;
+    while(n){
+        if(n&1){
+            ans = Multi_Matrax(ans,temp);
+        }
+        temp = Multi_Matrax(temp,temp);
+        n >>= 1;
+    }
+    return ans;
+}
+
+class AcAutomation
+{
+public:
+    int index;           //结点总数,0为根节点
+    int fail[maxn];      //失败指针
+    int trie[maxn][col]; //trie tree
+    int tag[maxn];       //单词结尾标记
+    int id['Z'+1];
+
+    void init(){
+        index = 1;
+        memset(trie[0],-1,sizeof(trie[0]));
+        memset(tag,0,sizeof(tag));
+
+        id['A'] = 0;
+        id['T'] = 1;
+        id['C'] = 2;
+        id['G'] = 3;
+    }
+
+    //构建trie
+    void trie_insert(char st[]){
+        int p = 0;
+        int len = strlen(st);
+        for(int i = 0; i < len; ++i){
+            int x = id[st[i]];
+            if(trie[p][x] == -1){
+                memset(trie[index],-1,sizeof(trie[index]));
+                trie[p][x] = index++;
+            }
+            p = trie[p][x];
+        }
+        tag[p] = 1;
+    }
+
+    //用bfs计算每个节点fail指针
+    void build_fail(){
+        fail[0] = 0;
+        queue<int>q;
+        for(int i = 0; i < col; ++i){
+            if(trie[0][i] != -1){
+                fail[trie[0][i]] = 0;
+                q.push(trie[0][i]);
+            }else{
+                trie[0][i] = 0;    //不能丢
+            }
+        }
+
+        while(!q.empty()){
+            int u = q.front();
+            q.pop();
+            if(tag[fail[u]])
+                tag[u] = 1;
+            for(int i = 0; i < col; ++i){
+                int &v = trie[u][i];
+                if(v != -1){
+                    q.push(v);
+                    fail[v] = trie[fail[u]][i];
+                }else{
+		    //因为这些结点是通过bfs处理的，不用担心trie[fail[u]][i]值无效。
+                    v = trie[fail[u]][i];
+                }
+            }
+        }
+    }
+
+    //根据trie树状态转移构建矩阵
+    Matrax buildMatrix(){
+        Matrax ans;
+        ans.r = ans.c = index;
+        for(int i = 0; i < index; ++i){
+            for(int j = 0; j < col; ++j){
+                if(!tag[i] && !tag[trie[i][j]])
+                    ans.a[i][trie[i][j]]++;
+            }
+        }
+        return ans;
+    }
+};
+
+int main()
+{
+    int n,m;
+    char st[20];
+    AcAutomation ac;
+    ac.init();
+    scanf("%d%d",&n,&m);
+    for(int i = 0; i < n; ++i){
+        scanf(" %s",st);
+        ac.trie_insert(st);
+    }
+    ac.build_fail();
+    Matrax re = ac.buildMatrix();
+
+    re = Fast_Matrax(re,m);
+    int ans = 0;
+    for(int i = 0; i < re.r; ++i){
+        ans = (ans+re.a[0][i])%mod;
+    }
+    printf("%d\n",ans);
+    return 0;
+}

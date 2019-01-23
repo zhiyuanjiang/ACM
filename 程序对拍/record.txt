@@ -1,0 +1,11 @@
+g++ -c main.cpp     //将main.cpp文件编译生成obj文件
+g++ main.o -o xxx   //将main.o文件生成指定名的可执行文件
+
+dos下的命令
+fc x1.txt x2.txt    //比较两个文件
+xxx.exe > out.txt   //输出数据到out.txt文件中
+xxx.exe < in.txt    //将in.txt的数据读入到xxx.exe中
+
+//重定向输入输出流
+freopen("F:\\in.txt","r",stdin);
+freopen("F:\\out.txt","w",stdout);

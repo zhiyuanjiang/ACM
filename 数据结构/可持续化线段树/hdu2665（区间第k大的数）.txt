@@ -1,0 +1,120 @@
+#include <iostream>
+#include <algorithm>
+#include <cstring>
+#include <cstdio>
+#include <cmath>
+#include <vector>
+#include <set>
+#include <map>
+
+using namespace std;
+
+typedef long long llt;
+
+const int N = 100010;
+const int M = 50010;
+const int INF = 0x3fffffff;
+
+//静态求第k小的数
+//可持久化线段树
+
+struct Node{
+    int lc,rc;
+    int cnt;
+}node[N*20];
+
+int cur,data[N],ha[N],root[N];
+int n,m;
+map<int,int>mp;   //map太烧内存了，2个map会爆内存
+
+void init()
+{
+    cur = 0;
+    mp.clear();
+}
+
+//离散化
+int Hash()
+{
+    for(int i = 0; i < n; ++i) ha[i] = data[i];
+    sort(data,data+n);
+    int sz = unique(data,data+n)-data;
+    for(int i = 0; i < n; ++i){
+        int t = ha[i];
+        ha[i] = lower_bound(data,data+sz,t)-data+1;
+        mp[ha[i]] = t;
+    }
+    return sz;
+}
+
+inline void PushUp(int rt)
+{
+    node[rt].cnt = node[node[rt].lc].cnt+node[node[rt].rc].cnt;
+}
+
+int Build(int l,int r)
+{
+    int k = cur++;
+    if(l == r){
+        node[k].cnt = 0;
+        return k;
+    }
+    int mid = (l+r)>>1;
+    node[k].lc = Build(l,mid);
+    node[k].rc = Build(mid+1,r);
+    PushUp(k);
+    return k;
+}
+
+//rt表示前一颗线段树的根节点,pos表示第i个点的值，val表示数量
+int Update(int rt,int l,int r,int pos,int val)
+{
+    int k = cur++;
+    node[k] = node[rt];
+    if(l == pos && r == pos){
+        node[k].cnt += val;
+        return k;
+    }
+    int mid = (l+r)>>1;
+    if(pos <= mid) node[k].lc = Update(node[rt].lc,l,mid,pos,val);
+    else node[k].rc = Update(node[rt].rc,mid+1,r,pos,val);
+    PushUp(k);
+    return k;
+}
+
+int Query(int l,int r,int rt1,int rt2,int kth)
+{
+    if(l == r) return l;
+    int mid = (l+r)>>1;
+    int res = node[node[rt1].lc].cnt-node[node[rt2].lc].cnt;
+    if(kth <= res) return Query(l,mid,node[rt1].lc,node[rt2].lc,kth);
+    else return Query(mid+1,r,node[rt1].rc,node[rt2].rc,kth-res);
+}
+
+int main()
+{
+//    int T;
+//    scanf("%d",&T);
+    while(~scanf("%d%d",&n,&m)){
+        init();
+//        scanf("%d%d",&n,&m);
+        for(int i = 0; i < n; ++i){
+            scanf("%d",&data[i]);
+        }
+        int mx = Hash(),rt;
+
+        rt = Build(1,mx);
+        root[0] = 0;
+        for(int i = 0; i < n; ++i){
+            rt = Update(rt,1,mx,ha[i],1);
+            root[i+1] = rt;
+        }
+        int a,b,c;
+        for(int i = 0; i < m; ++i){
+            scanf("%d%d%d",&a,&b,&c);
+            int ans = Query(1,mx,root[b],root[a-1],c);
+            printf("%d\n",mp[ans]);
+        }
+    }
+    return 0;
+}

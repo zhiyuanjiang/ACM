@@ -1,0 +1,84 @@
+#include <cstdio>
+#include <algorithm>
+using namespace std;
+#define size1 20
+#define size2 1009
+
+//O(VE^2)
+
+//边的结构
+struct edge_t{
+    int node;
+    int c;//c为容量
+    edge_t* next;
+    edge_t* redge;//指向反向边
+}Edge[size2*2];
+int ECnt;
+
+//图的邻接表
+edge_t* Ver[size1];
+
+void init(){
+    ECnt = 0;
+    fill(Ver,Ver+size1,(edge_t*)0);
+}
+
+//生成双向边
+void mkEdge(int a,int b,int c){
+    int t1 = ECnt++;
+    int t2 = ECnt++;
+
+    Edge[t1].node = b;
+    Edge[t1].c = c;
+    Edge[t1].next = Ver[a];
+    Edge[t1].redge = Edge + t2;
+    Ver[a] = Edge + t1;
+
+    Edge[t2].node = a;
+    Edge[t2].c = 0;
+    Edge[t2].next = Ver[b];
+    Edge[t2].redge = Edge + t1;
+    Ver[b] = Edge + t2;
+}
+
+bool F[size1];
+//u当前节点,f为当前流
+//寻找增广路径
+int dfs(int u,int e,int f){
+    //N为汇点
+    if ( u == e ) return f;
+
+    F[u] = true;
+    for(edge_t*p=Ver[u];p;p=p->next){
+        int v = p->node;
+        if( F[v] ) continue;
+        int c = p->c;
+
+        if ( c > 0 ){
+            int t = dfs(v,e,min(c,f));
+            if ( 0 == t ) continue;
+
+            p->c -= t;
+            p->redge->c += t;
+            return t;
+        }
+    }
+
+    return 0;
+}
+
+int solve( int s , int e ){
+    int ret = 0;
+    while(1){
+        fill(F,F+size1,false);
+        int t = dfs(s,e,INT_MAX);
+        if ( 0 == t ) return ret;
+        ret += t;
+    }
+}
+
+int main()
+{
+    
+    return 0;
+}

@@ -1,0 +1,50 @@
+#include <iostream>
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+
+using namespace std;
+
+#define lowbit(x) (x&-x)
+
+const int maxn = 1000010;
+
+int C[maxn],A[maxn];
+
+void init(int n)
+{
+    memset(C,0,sizeof(C));
+    for(int i = 1; i <= n; ++i){
+        for(int j = i-lowbit(i)+1; j <= i; ++j){
+            C[i] += A[j];
+        }
+    }
+}
+
+//sum[A1,Ax]
+int sum(int x)
+{
+    int ret = 0;
+    while(x){
+        ret += C[x]; 
+        x -= lowbit(x);
+    }
+    return ret;
+}
+
+//A[x] += d
+void add(int x,int d,int n)
+{
+    while(x <= n){
+        C[x] += d;  
+        x += lowbit(x);
+    }
+}
+
+int main()
+{
+
+    return 0;
+}
+
+

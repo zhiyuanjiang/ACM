@@ -1,0 +1,50 @@
+﻿const int N = 110;
+const int M = 100010;
+const int INF = 0x3fffffff;
+
+struct Node{
+    int id,val;
+    Node(){}
+    Node(int _id,int _v){
+        id = _id; val = _v;
+    }
+}q[M];
+
+int dp[M],V;   ////V是所有商品的总价值
+int cnt[N],v[N];
+
+//01背包
+void ZeroOnePack(int cost,int value)
+{
+    for(int i = V; i >= cost; --i)
+        dp[i] = max(dp[i],dp[i-cost]+value);
+}
+
+//完全背包
+void CompletePack(int cost,int value)
+{
+    for(int i = cost; i <= V; ++i)
+        dp[i] = max(dp[i],dp[i-cost]+value);
+}
+
+//多重背包
+void MultiPack(int num,int cost,int value)
+{
+    for(int j = 0; j < cost; ++j){
+        int head = 1,tail = 0;
+        for(int k = j,i = 0; k <= V; k += cost, ++i){
+            int r = dp[k]-i*value;
+            while(head <= tail && r >= q[tail].val) tail--;
+            q[++tail] = Node(i,r);
+            while(q[head].id < i-num) head++;
+            dp[k] = q[head].val+i*value;
+        }
+    }
+}
+
+int main()
+{
+
+    return 0;
+}
+

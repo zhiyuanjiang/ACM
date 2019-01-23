@@ -1,0 +1,40 @@
+#include <iostream>
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+#include <ctime>
+
+using namespace std;
+
+/*
+    ºÚµ•—°‘Ò≈≈–Ú£∫n^2
+*/
+
+const int N = 110;
+const int INF = 0x3ffffff;
+
+int a[N];
+
+void SelectSort(int n)
+{
+    for(int i = 0; i < n-1; ++i){
+        int ans = INF,tick;
+        for(int j = i; j < n; ++j){
+            if(ans > a[j]){
+                ans = a[j];
+                tick = j;
+            }
+        }
+        swap(a[i],a[tick]);
+    }
+}
+
+int main()
+{
+    srand(time(NULL));
+    for(int i = 0; i < 10; ++i) a[i] = rand()%100;
+    SelectSort(10);
+    for(int i = 0; i < 10; ++i)
+        cout << a[i] << endl;
+    return 0;
+}

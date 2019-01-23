@@ -1,0 +1,56 @@
+#include <stdio.h>
+#include <cstring>
+#include <iostream>
+#include <stdlib.h>
+#include <queue>
+#include <stack>
+using namespace std;
+
+
+#define exch(a,b) {int t=a;a=b;b=t;}
+int count=0;
+
+
+char ch[28];
+void init(int a)
+{
+    for(int i=0;i<a;++i)
+    ch[i]='A'+i;
+}
+
+void dfs(int depth,int T)
+{
+    if(depth==1)
+    {printf("%s\n",ch);count++;return;}
+
+    if(count>=T) return;
+
+    dfs(depth-1,T);
+
+    for(int i=0;i<depth-1;++i)
+    {
+        exch(ch[depth-1],ch[i]);
+        dfs(depth-1,T);
+        exch(ch[depth-1],ch[i]);
+    }
+    return ;
+}
+int main()
+{
+    int K,N,T;
+    int num=0;
+    scanf("%d",&K);
+    while(K--)
+    {
+        count=0;
+        scanf("%d%d",&N,&T);
+        init(N);
+  
+        printf("Case %d:\n",++num);
+        dfs(N,T);
+    }
+
+    return 0;
+}
+
+//////在stl中有排列函数

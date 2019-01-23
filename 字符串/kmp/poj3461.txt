@@ -1,0 +1,79 @@
+#include <iostream>
+#include <algorithm>
+#include <stdio.h>
+#include <string.h>
+
+using namespace std;
+
+const int N = 1005000;
+const int M = 10100;
+
+//poj3461
+//计算子串在目标串中出现的次数
+
+int nt[N],pLen;
+char s[N],p[M];
+
+void GetNext(char* p)
+{
+    int pLen = strlen(p);
+    nt[0] = -1;
+    int k = -1,j = 0;
+    while (j < pLen - 1){
+        //p[k]表示前缀，p[j]表示后缀
+        if (k == -1 || p[j] == p[k]){
+            ++k;
+            ++j;
+            if (p[j] != p[k])
+                nt[j] = k;   //之前只有这一行
+            else
+                //因为不能出现p[j] = p[ nt[j ]]
+                //所以当出现时需要继续递归，k = nt[k] = nt[nt[k]]
+                nt[j] = nt[k];
+        }else{
+            k = nt[k];
+        }
+    }
+}
+
+int KMP(char* s, char* p)
+{
+    int i = 0,j = 0,ans = 0;
+    int sLen = strlen(s);
+    while (i < sLen){
+	//找到一处匹配
+        if(j == pLen){
+            ans++;
+            j = nt[pLen];
+        }
+        //如果j = -1,或者当前字符匹配成功(即S[i] == P[j]),都令i++，j++
+        if (j == -1 || s[i] == p[j]){
+            i++;
+            j++;
+        }else{
+            //如果j != -1,且当前字符匹配失败(即S[i] != P[j]),则令 i 不变，j = nt[j]
+            //nt[j]即为j所对应的nt值
+            j = nt[j];
+        }
+    }
+    if(j == pLen){
+        ans++;
+    }
+    return ans;
+}
+
+int main()
+{
+    int T;
+    scanf("%d",&T);
+    while(T--){
+        scanf(" %s",p);
+        scanf( "%s",s);
+        pLen = strlen(p);
+        p[pLen] = '#';
+        GetNext(p);
+
+        printf("%d\n",KMP(s,p));
+    }
+    return 0;
+}

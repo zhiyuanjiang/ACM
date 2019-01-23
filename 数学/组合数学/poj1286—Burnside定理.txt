@@ -1,0 +1,51 @@
+#include <iostream>
+#include <cstdio>
+
+using namespace std;
+
+typedef long long ll;
+
+//3种颜色染正n边形的n个顶点的方法数
+
+ll pow(int x,int n)
+{
+    ll ret = 1;
+    for( int i = 0 ; i < n ; ++i ){
+        ret *= (ll)x;
+    }
+    return ret;
+}
+
+int gcd(int a,int b)
+{
+    return b==0?a:gcd(b,a%b);
+}
+
+ll isodd(int n)
+{
+    ll re = 0;
+    for( int i = 1 ; i <= n ; ++i ){
+        re += pow(3,gcd(n,i));
+    }
+    return (re+n*pow(3,(n+1)/2))/(2*n);
+}
+
+ll iseven(int n)
+{
+    ll re = 0;
+    for( int i = 1 ; i <= n ; ++i ){
+        re += pow(3,gcd(n,i));
+    }
+    return (re+(pow(3,n/2)+pow(3,n/2+1))*(n/2))/(2*n);
+}
+
+int main()
+{
+    int n;
+    while( cin >> n && n != -1 ){
+        if( n == 0 ){cout << 0 << endl; continue;}
+        if( n%2 == 0 ) cout << iseven(n) << endl;
+        else cout << isodd(n) << endl;
+    }
+    return 0;
+}
