@@ -18,6 +18,22 @@ const int N = 50010;
 http://blog.csdn.net/acdreamers/article/details/10591443
 */
 
+/*
+sz[]数组，用来保存以x为根的子树节点个数
+
+top[]数组，用来保存当前节点的所在链的顶端节点
+
+son[]数组，用来保存重儿子
+
+dep[]数组，用来保存当前节点的深度
+
+fa[]数组，用来保存当前节点的父亲
+
+tid[]数组，用来保存树中每个节点剖分后的新编号
+
+rank[]数组，用来保存当前节点在线段树中的位置
+*/
+
 struct Edge{
     int node;
     Edge*next;

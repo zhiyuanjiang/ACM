@@ -27,6 +27,7 @@ int sum(int x)
     int ret = 0;
     while(x){
         ret += C[x]; 
+		//找x的后继
         x -= lowbit(x);
     }
     return ret;
@@ -37,6 +38,7 @@ void add(int x,int d,int n)
 {
     while(x <= n){
         C[x] += d;  
+		//更新x的前倾结点
         x += lowbit(x);
     }
 }
