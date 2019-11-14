@@ -1,69 +1,71 @@
-#include <cstdio>
-#include <vector>
-#include <algorithm>
-#include <queue>
+#include <bits/stdc++.h>
+
 using namespace std;
-#define SIZE 205
+
+const int N = 500010;
+const int INF = 0x3ffffff;
 
 //O(VE)
 
-//边的结构
-struct edge_t{
+struct Edge{
     int node;
-    int c;//c为容量
-    edge_t* next;
-    edge_t* redge;//指向反向边
-}Edge[SIZE*2];
-int ECnt;
+    int c;  //c为容量
+    Edge* next;
+    Edge* redge;  //指向反向边
+}edge[2000];
+int Ecnt;
 
-//图的邻接表
-edge_t* Ver[SIZE];
+Edge* head[110];
 
-void init(){
-    ECnt = 0;
-    fill(Ver,Ver+SIZE,(edge_t*)0);
+void init()
+{
+    Ecnt = 0;
+    fill(head, head+110, (Edge*)0);
 }
 
 //生成双向边
-void mkEdge(int a,int b,int c){
-    int t1 = ECnt++;
-    int t2 = ECnt++;
+void mkEdge(int a, int b, int c)
+{
+    int t1 = Ecnt++;
+    int t2 = Ecnt++;
 
-    Edge[t1].node = b;
-    Edge[t1].c = c;
-    Edge[t1].next = Ver[a];
-    Edge[t1].redge = Edge + t2;
-    Ver[a] = Edge + t1;
+    edge[t1].node = b;
+    edge[t1].c = c;
+    edge[t1].next = head[a];
+    edge[t1].redge = edge+t2;
+    head[a] = edge+t1;
 
-    Edge[t2].node = a;
-    Edge[t2].c = 0;
-    Edge[t2].next = Ver[b];
-    Edge[t2].redge = Edge + t1;
-    Ver[b] = Edge + t2;
+    edge[t2].node = a;
+    edge[t2].c = 0;
+    edge[t2].next = head[b];
+    edge[t2].redge = edge+t1;
+    head[b] = edge+t2;
 }
 
-int L[SIZE];//层次图
+//层次图
+int L[110];
 
 //建立残留网络从源s到汇t的层次图
-bool bfs(int s,int t){
-    fill(L,L+SIZE,-1);
+bool bfs(int s, int t)
+{
+    fill(L, L+110, -1);
     queue<int> q;
     q.push(s);
     L[s] = 0;
 
-    while( !q.empty() ){
+    while(!q.empty()){
         int u = q.front();
         q.pop();
 
         //寻找还有残量的边
-        for(edge_t*p=Ver[u];p;p=p->next){
-            if ( p->c <= 0 ) continue;
+        for(Edge*p = head[u]; p; p = p->next){
+            if(p->c <= 0) continue;
 
             int v = p->node;
-            if ( -1 != L[v] ) continue;
+            if(-1 != L[v]) continue;
 
             q.push(v);
-            L[v] = L[u] + 1;
+            L[v] = L[u]+1;
         }
     }
 
@@ -72,35 +74,38 @@ bool bfs(int s,int t){
 
 //在层次图上搜索增广路径，本质上就是搜索可以增广的流量
 //这个流量是各层之间流量的最小值
-//u为当前节点，cf为流入结点u的最小流，t为汇点
-int dfs(int u,int e,int cf){
-    if ( u == e ) return cf;
+//u为当前节点，cf为流入节点u的最小流，t为汇点
+int dfs(int u, int e, int cf)
+{
+    if(u == e) return cf;
 
-    int tf = 0;  //tf记录从结点u流往下一层的总可行流量
-    for(edge_t*p=Ver[u];p;p=p->next){
+    int tf = 0;  //tf记录从节点u流往下一层的总可行流量
+    for(Edge*p = head[u]; p; p = p->next){
         int v = p->node;
         int c = p->c;
 
-        if ( L[u] + 1 == L[v] && c > 0 && cf > tf ){
-            int f = dfs(v,e,min(c,cf-tf));
-            if ( 0 == f ) continue;
+        if(L[u]+1 == L[v] && c > 0 && cf > tf){
+            int f = dfs(v, e, min(c, cf-tf));
+            if(0 == f) continue;
 
-            p->c -= f;//正向边减去可行流量
-            p->redge->c += f;//反向边加上
+            p->c -= f; //正向边减去可行流量
+            p->redge->c += f; //反向边加上
             tf += f;
         }
     }
-    if ( 0 == tf ) L[u] = -1;//修改层次图
+    if(0 == tf) L[u] = -1; //修改层次图
     return tf;
 }
 
 //Dinic算法，s为源，t为汇
-int Dinic(int s,int t){
+int Dinic(int s, int t)
+{
     int ret = 0;
-    while( bfs(s,t) ){//第一步建立分层图
+    //第一步建立分层图
+    while(bfs(s, t)){
         int ans;
         //第二步在分层图上查找一条增广路径的可行流量
-        while( ans = dfs(s,t,INT_MAX) )
+        while(ans = dfs(s, t, INF))
             ret += ans;
     }
     return ret;
