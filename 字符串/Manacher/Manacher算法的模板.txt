@@ -5,8 +5,8 @@
 
 using namespace std;
 
-const int N = 110100;
-int len[2*N];
+const int N = 100010;
+int len[2*N];  // 以当前点为中点的回文串长度的一半
 char st[2*N],data[N];
 
 int Manacher(char*st,int*len){
